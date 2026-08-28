@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garmin Watch Face Studio - dsh</title>
+  <style>
+    :root {
+      --bg-dark: #12141a;
+      --bg-panel: #1a1d26;
+      --border-color: #2a2e3d;
+      --text-main: #e2e8f0;
+      --text-muted: #8b949e;
+      --accent-color: #00a0ff;
+      --accent-green: #00cc66;
+      --accent-warn: #ffaa00;
+      --accent-danger: #ff4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Bar */
+    header { height: 46px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 14px; }
+    .logo { font-weight: bold; display: flex; align-items: center; gap: 8px; color: var(--accent-color); }
+    .device-badge { background: #232736; border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 12px; font-size: 12px; color: var(--text-main); }
+
+    /* 3-Column Layout */
+    .studio-container { display: flex; flex: 1; overflow: hidden; }
+
+    /* Left Panel: Layers & Resource Budget (Schematic) */
+    .left-panel { width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 14px; gap: 14px; overflow-y: auto; }
+    .panel-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+    .card-box { background: #202430; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; }
+    
+    .layer-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; background: #161820; border-radius: 4px; margin-bottom: 6px; font-size: 13px; }
+    .budget-bar-bg { height: 8px; background: #2d3345; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .budget-bar-fill { height: 100%; width: 33%; background: var(--accent-green); border-radius: 4px; transition: width 0.3s; }
+    .placeholder-box { border: 1px dashed #3a4158; border-radius: 6px; padding: 12px; text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+
+    /* Center Stage: Fenix 7 Simulator */
+    .center-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0c10; padding: 20px; position: relative; }
+    .watch-bezel {
+      width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(circle, #252830 0%, #15171e 80%, #0d0e12 100%);
+      border: 8px solid #2e3444; box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .watch-screen { width: 260px; height: 260px; border-radius: 50%; overflow: hidden; background: #000; position: relative; }
+    .screen-overlay-night { position: absolute; inset: 0; background: rgba(0, 255, 100, 0.15); pointer-events: none; mix-blend-mode: screen; display: none; }
+
+    .simulator-controls { margin-top: 24px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 16px; display: flex; gap: 16px; align-items: center; font-size: 12px; }
+    .control-item { display: flex; align-items: center; gap: 8px; }
+    .btn-toggle { background: #2a2e3d; border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .btn-toggle.active { background: var(--accent-color); border-color: var(--accent-color); font-weight: bold; }
+
+    /* Right Panel: Garmin Co-pilot & Chat */
+    .right-panel { width: 380px; background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
+    .presets-container { padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-btn { background: #232736; border: 1px solid #363c50; color: #cbd5e1; padding: 4px 10px; border-radius: 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .tag-btn:hover { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
+
+    .chat-messages { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg { padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; max-width: 90%; }
+    .msg-user { align-self: flex-end; background: #005fb8; color: #fff; }
+    .msg-agent { align-self: flex-start; background: #202430; border: 1px solid var(--border-color); }
+    .agent-meta { font-size: 11px; color: var(--accent-green); margin-top: 4px; display: flex; gap: 10px; }
+
+    .chat-input-area { padding: 12px; border-top: 1px solid var(--border-color); background: #161820; display: flex; flex-direction: column; gap: 8px; }
+    .quick-comps { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .comp-btn { background: #232736; border: 1px solid #363c50; color: #94a3b8; padding: 3px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+    .comp-btn:hover { color: #fff; border-color: var(--accent-color); }
+    .input-row { display: flex; gap: 8px; }
+    .chat-input { flex: 1; background: #202430; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 13px; outline: none; }
+    .chat-input:focus { border-color: var(--accent-color); }
+    .btn-send { background: var(--accent-color); border: none; border-radius: 6px; padding: 0 14px; color: #fff; font-weight: bold; cursor: pointer; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span>⌚ Garmin Watch Face Studio</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(dsh-plugin-garmin)</span>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <span class="device-badge">目标设备: Garmin Fenix 7 (260x260 MIP)</span>
+      <button class="btn-toggle" style="background:#006633; border-color:#008844;">一键导出 .prg / Zip</button>
+    </div>
+  </header>
+
+  <div class="studio-container">
+    <!-- Left Column: Layer & Resource Budget (Schematic) -->
+    <div class="left-panel">
+      <div>
+        <div class="panel-title">硬件预算守护 (Hardware Guard)</div>
+        <div class="card-box">
+          <div style="display:flex; justify-content:space-between; font-size:12px;">
+            <span>App Memory</span>
+            <span id="memText" style="color:var(--accent-green); font-weight:bold;">42.5 KB / 128 KB</span>
+          </div>
+          <div class="budget-bar-bg">
+            <div id="memBar" class="budget-bar-fill" style="width: 33%;"></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:10px;">
+            <span>1Hz 刷新开销</span>
+            <span style="color:var(--accent-green); font-weight:bold;">12 ms / 30 ms</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:8px;">
+            <span>MIP 64色合规</span>
+            <span style="color:var(--accent-green); font-weight:bold;">100% 合规</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-title">表盘图层层级 (Layer Tree)</div>
+        <div id="layerList">
+          <div class="layer-item"><span>🔘 背景与刻度 (Dial Ticks)</span><span style="color:var(--text-muted); font-size:11px;">#000000</span></div>
+          <div class="layer-item"><span>🕒 时钟主显示 (Clock Time)</span><span style="color:var(--accent-color); font-size:11px;">NUMBER_HOT</span></div>
+          <div class="layer-item"><span>❤️ 心率环 (Heart Rate)</span><span style="color:#ff5500; font-size:11px;">Arc 78bpm</span></div>
+          <div class="layer-item"><span>🔋 电量条 (Battery)</span><span style="color:#00ff00; font-size:11px;">86%</span></div>
+          <div class="layer-item"><span>👣 每日步数 (Steps)</span><span style="color:#00a0ff; font-size:11px;">7,420</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-title">精细几何与属性 (占位示意)</div>
+        <div class="placeholder-box">
+          [占位] 图层位置、对齐、自定义字阶与变量绑定配置模块
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Column: Fenix 7 Live Stage -->
+    <div class="center-stage">
+      <div class="watch-bezel">
+        <div class="watch-screen" id="watchScreen">
+          <div class="screen-overlay-night" id="nightOverlay"></div>
+          <div id="svgContainer" style="width: 100%; height: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Live Simulator Controls -->
+      <div class="simulator-controls">
+        <div class="control-item">
+          <span>时间:</span>
+          <input type="range" id="timeSlider" min="0" max="1439" value="608" style="width:90px;">
+          <span id="timeVal">10:08</span>
+        </div>
+        <div class="control-item">
+          <span>心率:</span>
+          <input type="range" id="hrSlider" min="40" max="180" value="78" style="width:70px;">
+          <span id="hrVal">78</span>
+        </div>
+        <div class="control-item">
+          <span>电量:</span>
+          <input type="range" id="batSlider" min="5" max="100" value="86" style="width:60px;">
+          <span id="batVal">86%</span>
+        </div>
+        <div class="control-item">
+          <button class="btn-toggle active" id="btnPower">高功耗 (1Hz)</button>
+          <button class="btn-toggle" id="btnNight">日光 MIP</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Garmin Co-pilot & Chat -->
+    <div class="right-panel">
+      <!-- Quick Style Presets -->
+      <div class="presets-container">
+        <div class="panel-title" style="margin-bottom: 4px;">快捷设计预设 (Style Presets)</div>
+        <div class="tag-row">
+          <button class="tag-btn" onclick="applyPreset('sport')">高能运动 (Sport)</button>
+          <button class="tag-btn" onclick="applyPreset('pilot')">航空飞行 (Pilot)</button>
+          <button class="tag-btn" onclick="applyPreset('tactical')">战术仪表 (Tactical)</button>
+          <button class="tag-btn" onclick="applyPreset('minimal')">极简时钟 (Minimal)</button>
+        </div>
+      </div>
+
+      <!-- Dialogue Stream -->
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg msg-agent">
+          你好！我是 Garmin Fenix 7 表盘生成助手。已为你准备好 260x260 MIP 规范的运动数字表盘。你可以直接在左侧查看实时仿真，或点击下方快捷插槽添加数据项！
+          <div class="agent-meta">
+            <span>📦 内存估算: 42.5KB</span>
+            <span>🎯 目标: Fenix 7</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area with Quick Complication Insert Buttons -->
+      <div class="chat-input-area">
+        <div class="quick-comps">
+          <button class="comp-btn" onclick="quickAddComp('heart_rate')">+ ❤️ 心率环</button>
+          <button class="comp-btn" onclick="quickAddComp('steps')">+ 👣 步数进度</button>
+          <button class="comp-btn" onclick="quickAddComp('battery')">+ 🔋 电量百分比</button>
+          <button class="comp-btn" onclick="quickAddComp('calories')">+ 🔥 卡路里</button>
+          <button class="comp-btn" onclick="quickAddComp('altitude')">+ ⛰️ 气压海拔</button>
+          <button class="comp-btn" onclick="quickAddComp('date')">+ 📅 星期日期</button>
+        </div>
+        <div class="input-row">
+          <input type="text" class="chat-input" id="userInput" placeholder="输入设计或调整指令，如：将主色调改为军绿，指针加宽..." onkeydown="if(event.key==='Enter') sendUserMessage()">
+          <button class="btn-send" onclick="sendUserMessage()">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock State & Dynamic Render Logic
+    let currentSpec = {
+      name: "GarminSportDynamic",
+      theme: "sport",
+      targetDevice: "fenix7",
+      backgroundColor: "#000000",
+      dial: { showTicks: true, tickColor: "#555555", subTicks: true, showNumbers: true, numberColor: "#AAAAAA", radius: 120 },
+      clockType: "hybrid",
+      digitalClock: { x: 130, y: 95, font: "NUMBER_HOT", color: "#FFFFFF", showSeconds: true, showAmPm: false },
+      analogHands: { hourColor: "#FFFFFF", minuteColor: "#AAAAAA", secondColor: "#FF5500", hourLength: 55, minuteLength: 85, secondLength: 100, hourWidth: 4, minuteWidth: 3, secondWidth: 1.5, accentTail: true },
+      complications: [
+        { id: "c1", type: "heart_rate", style: "arc_progress", position: { x: 75, y: 165 }, color: "#FF5500" },
+        { id: "c2", type: "steps", style: "arc_progress", position: { x: 185, y: 165 }, color: "#00AAFF" },
+        { id: "c3", type: "battery", style: "bar_progress", position: { x: 130, y: 215 }, color: "#00FF00" },
+        { id: "c4", type: "date", style: "badge", position: { x: 130, y: 55 }, color: "#FFAA00" }
+      ]
+    };
+
+    let simState = {
+      hours: 10, minutes: 8, seconds: 42,
+      heartRate: 78, batteryPercent: 86, steps: 7420, stepGoal: 10000,
+      calories: 480, altitudeMeters: 350, dateString: '10-24', dayOfWeek: 'WED',
+      isSleepMode: false
+    };
+
+    // Render SVG
+    function renderSvg() {
+      const cx = 130, cy = 130, r = 130;
+      let el = [];
+      el.push('<svg viewBox="0 0 260 260" width="260" height="260" xmlns="http://www.w3.org/2000/svg">');
+      el.push('<defs><clipPath id="f7-clip"><circle cx="130" cy="130" r="130"/></clipPath></defs>');
+      el.push('<g clip-path="url(#f7-clip)">');
+      el.push('<rect width="260" height="260" fill="' + currentSpec.backgroundColor + '"/>');
+
+      // Dial Ticks
+      if (currentSpec.dial && currentSpec.dial.showTicks) {
+        for (let i = 0; i < 60; i++) {
+          let isMajor = (i % 5 === 0);
+          if (!isMajor && !currentSpec.dial.subTicks) continue;
+          let a = (i * 6 * Math.PI) / 180;
+          let len = isMajor ? 8 : 4;
+          let r0 = currentSpec.dial.radius || 120;
+          let x1 = cx + (r0 - len) * Math.sin(a), y1 = cy - (r0 - len) * Math.cos(a);
+          let x2 = cx + r0 * Math.sin(a), y2 = cy - r0 * Math.cos(a);
+          el.push('<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+currentSpec.dial.tickColor+'" stroke-width="'+(isMajor?2:1)+'"/>');
+        }
+      }
+
+      // Complications
+      currentSpec.complications.forEach(c => {
+        let px = c.position.x, py = c.position.y;
+        if (c.type === 'heart_rate') {
+          el.push('<circle cx="'+px+'" cy="'+py+'" r="22" fill="none" stroke="#333" stroke-width="3"/>');
+          let pct = Math.min(Math.max((simState.heartRate - 40) / 140, 0), 1);
+          el.push('<circle cx="'+px+'" cy="'+py+'" r="22" fill="none" stroke="'+c.color+'" stroke-width="3" stroke-dasharray="'+(pct*138)+', 138" transform="rotate(-90 '+px+' '+py+')"/>');
+          el.push('<text x="'+px+'" y="'+(py+4)+'" fill="'+c.color+'" font-size="12" font-weight="bold" text-anchor="middle">'+simState.heartRate+'</text>');
+          el.push('<text x="'+px+'" y="'+(py-9)+'" fill="#888" font-size="8" text-anchor="middle">HR</text>');
+        } else if (c.type === 'steps') {
+          el.push('<circle cx="'+px+'" cy="'+py+'" r="22" fill="none" stroke="#333" stroke-width="3"/>');
+          let pct = Math.min(simState.steps / simState.stepGoal, 1);
+          el.push('<circle cx="'+px+'" cy="'+py+'" r="22" fill="none" stroke="'+c.color+'" stroke-width="3" stroke-dasharray="'+(pct*138)+', 138" transform="rotate(-90 '+px+' '+py+')"/>');
+          el.push('<text x="'+px+'" y="'+(py+4)+'" fill="'+c.color+'" font-size="10" font-weight="bold" text-anchor="middle">'+simState.steps+'</text>');
+          el.push('<text x="'+px+'" y="'+(py-9)+'" fill="#888" font-size="8" text-anchor="middle">STEP</text>');
+        } else if (c.type === 'battery') {
+          el.push('<rect x="'+(px-20)+'" y="'+py+'" width="40" height="6" rx="2" fill="#333"/>');
+          el.push('<rect x="'+(px-20)+'" y="'+py+'" width="'+(40*simState.batteryPercent/100)+'" height="6" rx="2" fill="'+c.color+'"/>');
+          el.push('<text x="'+px+'" y="'+(py-4)+'" fill="'+c.color+'" font-size="10" font-weight="bold" text-anchor="middle">'+simState.batteryPercent+'%</text>');
+        } else if (c.type === 'date') {
+          el.push('<rect x="'+(px-28)+'" y="'+(py-9)+'" width="56" height="18" rx="3" fill="#222" stroke="#444" stroke-width="1"/>');
+          el.push('<text x="'+px+'" y="'+(py+4)+'" fill="'+c.color+'" font-size="10" font-weight="bold" text-anchor="middle">'+simState.dayOfWeek+' '+simState.dateString+'</text>');
+        } else if (c.type === 'calories') {
+          el.push('<text x="'+px+'" y="'+py+'" fill="'+c.color+'" font-size="11" font-weight="bold" text-anchor="middle">🔥 '+simState.calories+' kcal</text>');
+        } else if (c.type === 'altitude') {
+          el.push('<text x="'+px+'" y="'+py+'" fill="'+c.color+'" font-size="11" font-weight="bold" text-anchor="middle">⛰️ '+simState.altitudeMeters+'m</text>');
+        }
+      });
+
+      // Digital Clock
+      if (currentSpec.digitalClock) {
+        let dc = currentSpec.digitalClock;
+        let hh = String(simState.hours).padStart(2, '0');
+        let mm = String(simState.minutes).padStart(2, '0');
+        el.push('<text x="'+dc.x+'" y="'+dc.y+'" fill="'+dc.color+'" font-size="38" font-weight="bold" font-family="sans-serif" text-anchor="middle">'+hh+':'+mm+'</text>');
+      }
+
+      // Analog Hands
+      if (currentSpec.analogHands) {
+        let h = currentSpec.analogHands;
+        let hA = ((simState.hours % 12 + simState.minutes / 60) * 30 * Math.PI) / 180;
+        let mA = ((simState.minutes + simState.seconds / 60) * 6 * Math.PI) / 180;
+        let sA = (simState.seconds * 6 * Math.PI) / 180;
+
+        // Hour
+        el.push('<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+h.hourLength*Math.sin(hA)).toFixed(1)+'" y2="'+(cy-h.hourLength*Math.cos(hA)).toFixed(1)+'" stroke="'+h.hourColor+'" stroke-width="'+h.hourWidth+'" stroke-linecap="round"/>');
+        // Minute
+        el.push('<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+h.minuteLength*Math.sin(mA)).toFixed(1)+'" y2="'+(cy-h.minuteLength*Math.cos(mA)).toFixed(1)+'" stroke="'+h.minuteColor+'" stroke-width="'+h.minuteWidth+'" stroke-linecap="round"/>');
+        // Second (if not sleep)
+        if (!simState.isSleepMode) {
+          el.push('<line x1="'+(cx-15*Math.sin(sA)).toFixed(1)+'" y1="'+(cy+15*Math.cos(sA)).toFixed(1)+'" x2="'+(cx+h.secondLength*Math.sin(sA)).toFixed(1)+'" y2="'+(cy-h.secondLength*Math.cos(sA)).toFixed(1)+'" stroke="'+h.secondColor+'" stroke-width="'+h.secondWidth+'"/>');
+          el.push('<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="'+h.secondColor+'"/>');
+        }
+      }
+
+      el.push('</g></svg>');
+      document.getElementById('svgContainer').innerHTML = el.join('');
+    }
+
+    // Controls
+    document.getElementById('timeSlider').addEventListener('input', (e) => {
+      let v = parseInt(e.target.value);
+      simState.hours = Math.floor(v / 60);
+      simState.minutes = v % 60;
+      document.getElementById('timeVal').innerText = String(simState.hours).padStart(2,'0') + ':' + String(simState.minutes).padStart(2,'0');
+      renderSvg();
+    });
+
+    document.getElementById('hrSlider').addEventListener('input', (e) => {
+      simState.heartRate = parseInt(e.target.value);
+      document.getElementById('hrVal').innerText = simState.heartRate;
+      renderSvg();
+    });
+
+    document.getElementById('batSlider').addEventListener('input', (e) => {
+      simState.batteryPercent = parseInt(e.target.value);
+      document.getElementById('batVal').innerText = simState.batteryPercent + '%';
+      renderSvg();
+    });
+
+    const btnPower = document.getElementById('btnPower');
+    btnPower.addEventListener('click', () => {
+      simState.isSleepMode = !simState.isSleepMode;
+      btnPower.innerText = simState.isSleepMode ? '低功耗休眠 (Sleep)' : '高功耗 (1Hz)';
+      btnPower.classList.toggle('active', !simState.isSleepMode);
+      renderSvg();
+    });
+
+    const btnNight = document.getElementById('btnNight');
+    btnNight.addEventListener('click', () => {
+      const isNight = document.getElementById('nightOverlay').style.display === 'block';
+      document.getElementById('nightOverlay').style.display = isNight ? 'none' : 'block';
+      btnNight.innerText = isNight ? '日光 MIP' : '夜间背光';
+      btnNight.classList.toggle('active', !isNight);
+    });
+
+    window.applyPreset = function(preset) {
+      if (preset === 'pilot') {
+        currentSpec.theme = 'pilot';
+        currentSpec.dial.showTicks = true;
+        currentSpec.dial.tickColor = '#00AAFF';
+        currentSpec.analogHands.secondColor = '#FF5500';
+      } else if (preset === 'tactical') {
+        currentSpec.theme = 'tactical';
+        currentSpec.backgroundColor = '#000000';
+        currentSpec.dial.tickColor = '#55AA00';
+        currentSpec.analogHands.hourColor = '#00FF00';
+      } else if (preset === 'minimal') {
+        currentSpec.theme = 'minimal';
+        currentSpec.dial.showTicks = false;
+        currentSpec.complications = currentSpec.complications.slice(0, 2);
+      }
+      renderSvg();
+      addAgentMsg('已应用【' + preset + '】预设风格！已自动匹配 Fenix 7 的 64 色调色板。');
+    };
+
+    window.quickAddComp = function(type) {
+      const exists = currentSpec.complications.some(c => c.type === type);
+      if (exists) {
+        addAgentMsg('当前表盘已经包含该小部件。');
+        return;
+      }
+      currentSpec.complications.push({
+        id: 'c_' + Date.now(),
+        type: type,
+        style: 'icon_value',
+        position: { x: 130, y: 160 },
+        color: '#00FFAA'
+      });
+      renderSvg();
+      addAgentMsg('已在表盘中智能添加【' + type + '】数据项！');
+    };
+
+    window.sendUserMessage = function() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      const chat = document.getElementById('chatMessages');
+      const uMsg = document.createElement('div');
+      uMsg.className = 'msg msg-user';
+      uMsg.innerText = text;
+      chat.appendChild(uMsg);
+
+      setTimeout(() => {
+        addAgentMsg('已收到您的指令：“' + text + '”。正在分析布局空隙并更新 Monkey C 逻辑与视觉渲染...');
+      }, 500);
+    };
+
+    function addAgentMsg(text) {
+      const chat = document.getElementById('chatMessages');
+      const aMsg = document.createElement('div');
+      aMsg.className = 'msg msg-agent';
+      aMsg.innerHTML = text + '<div class="agent-meta"><span>📦 内存: 42.5KB</span><span>✅ MIP 合规</span></div>';
+      chat.appendChild(aMsg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Initial Render
+    renderSvg();
+  </script>
+</body>
+</html>
