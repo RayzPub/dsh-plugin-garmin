@@ -3,13 +3,15 @@ import * as path from 'node:path'
 import * as zlib from 'node:zlib'
 import { WatchFaceSpec } from '../preview/watchface-model.js'
 import { generateMonkeyCView } from '../preview/code-generator.js'
+import { normalizeWatchFaceSpec } from '../preview/templates.js'
 
 export interface ScaffoldOptions {
   projectDir: string
   appName: string
   clockType?: 'analog' | 'digital' | 'hybrid'
   theme?: string
-  spec?: WatchFaceSpec
+  spec?: WatchFaceSpec | Partial<WatchFaceSpec>
+  template?: string
 }
 
 function crc32(buf: Buffer): number {
@@ -186,52 +188,16 @@ function getApp() as GarminWatchFaceApp {
   await fs.writeFile(path.join(root, 'source', 'App.mc'), appMc)
   filesCreated.push('source/App.mc')
 
-  // 5. source/View.mc (generate dynamically if spec is provided, or build default spec)
-  let viewMc: string
-  if (options.spec) {
-    viewMc = generateMonkeyCView(options.spec)
-  } else {
-    const defaultSpec: WatchFaceSpec = {
-      name: options.appName,
-      theme: (options.theme as any) || 'sport',
-      targetDevice: 'fenix7',
-      backgroundColor: '#000000',
-      dial: {
-        showTicks: true,
-        tickColor: '#555555',
-        subTicks: false,
-        showNumbers: false,
-        numberColor: '#AAAAAA',
-        radius: 120
-      },
-      clockType: options.clockType || 'digital',
-      digitalClock: {
-        x: 130,
-        y: 105,
-        font: 'NUMBER_HOT',
-        color: '#FFFFFF',
-        showSeconds: true,
-        showAmPm: false
-      },
-      analogHands: options.clockType === 'analog' || options.clockType === 'hybrid' ? {
-        hourColor: '#FFFFFF',
-        minuteColor: '#00AAFF',
-        secondColor: '#FF0000',
-        hourLength: 55,
-        minuteLength: 85,
-        secondLength: 100,
-        hourWidth: 4,
-        minuteWidth: 3,
-        secondWidth: 1,
-        accentTail: true
-      } : undefined,
-      complications: [
-        { id: 'bat', type: 'battery', position: { x: 130, y: 155 }, style: 'bar_progress', color: '#AAAAAA' },
-        { id: 'step', type: 'steps', position: { x: 130, y: 180 }, style: 'arc_progress', color: '#00AAFF' }
-      ]
-    }
-    viewMc = generateMonkeyCView(defaultSpec)
+  // 5. source/View.mc (generate dynamically if spec is provided or using template)
+  const templateKey = options.template || options.theme || (options.spec?.theme as any)
+  const { spec: finalSpec } = normalizeWatchFaceSpec(options.spec, templateKey)
+  if (options.appName && (!options.spec || !options.spec.name)) {
+    finalSpec.name = options.appName
   }
+  if (options.clockType && (!options.spec || !options.spec.clockType)) {
+    finalSpec.clockType = options.clockType
+  }
+  const viewMc = generateMonkeyCView(finalSpec)
 
   await fs.writeFile(path.join(root, 'source', 'View.mc'), viewMc)
   filesCreated.push('source/View.mc')

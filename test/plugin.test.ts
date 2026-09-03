@@ -517,4 +517,114 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
     assert.ok(!bundleCode.startsWith('export '))
     assert.ok(!bundleCode.includes('\nexport '))
   })
+
+  it('18. snapToClosestMipColor and isExactMipColor must be null-safe and never throw .replace error', async () => {
+    const { snapToClosestMipColor, isExactMipColor } = await import('../src/preview/mip-palette.js')
+
+    // Undefined, null, and empty inputs must not throw
+    assert.doesNotThrow(() => snapToClosestMipColor(undefined))
+    assert.doesNotThrow(() => snapToClosestMipColor(null))
+    assert.doesNotThrow(() => snapToClosestMipColor(''))
+    assert.strictEqual(isExactMipColor(undefined), false)
+    assert.strictEqual(isExactMipColor(null), false)
+    assert.strictEqual(isExactMipColor(''), false)
+
+    // Named colors and COLOR_ prefix
+    const redSnap = snapToClosestMipColor('red')
+    assert.strictEqual(redSnap.hex, '#FF0000')
+    const orangeSnap = snapToClosestMipColor('COLOR_ORANGE')
+    assert.strictEqual(orangeSnap.hex, '#FF5500')
+
+    // 3-digit hex expansion
+    const hex3Snap = snapToClosestMipColor('#F00')
+    assert.strictEqual(hex3Snap.hex, '#FF0000')
+  })
+
+  it('19. generateGarminPreview should handle null/undefined/empty specs gracefully with template fallback', async () => {
+    // Calling with undefined must NOT throw Cannot read properties of undefined (reading 'replace')
+    let resNull: any
+    assert.doesNotThrow(() => {
+      resNull = generateGarminPreview(undefined)
+    })
+    assert.ok(resNull.svg.includes('<svg'))
+    assert.ok(resNull.diagnosticInfo.autoRepaired)
+    assert.strictEqual(resNull.templateUsed, 'tactical')
+    assert.ok(resNull.diagnosticInfo.warnings.length > 0)
+
+    // Calling with empty object
+    let resEmpty: any
+    assert.doesNotThrow(() => {
+      resEmpty = generateGarminPreview({} as any)
+    })
+    assert.ok(resEmpty.svg.includes('<svg'))
+    assert.ok(resEmpty.diagnosticInfo.autoRepaired)
+  })
+
+  it('20. generateGarminPreview should handle partial specs missing colors without .replace crash', async () => {
+    // Partial spec missing backgroundColor, dial colors, complication colors
+    const partialSpec: any = {
+      name: 'PartialTest',
+      theme: 'tactical',
+      clockType: 'hybrid',
+      dial: {
+        showTicks: true
+        // tickColor, numberColor intentionally omitted
+      },
+      analogHands: {
+        hourLength: 50
+        // hourColor, minuteColor, secondColor omitted
+      },
+      complications: [
+        {
+          id: 'hr_test',
+          type: 'heart_rate',
+          style: 'arc_progress'
+          // color and position omitted
+        }
+      ]
+    }
+
+    let preview: any
+    assert.doesNotThrow(() => {
+      preview = generateGarminPreview(partialSpec)
+    })
+    assert.ok(preview.svg.includes('<svg'))
+    assert.strictEqual(preview.metrics.colorPaletteValid, true)
+    assert.strictEqual(preview.success, true)
+  })
+
+  it('21. all 5 built-in watchface templates should render valid 260x260 SVGs within memory budget', async () => {
+    const { listWatchFaceTemplates } = await import('../src/preview/templates.js')
+    const templates = listWatchFaceTemplates()
+    assert.strictEqual(templates.length, 5)
+
+    const expectedIds = ['tactical', 'sport', 'pilot', 'minimal', 'hybrid']
+    for (const expectedId of expectedIds) {
+      const found = templates.find(t => t.id === expectedId)
+      assert.ok(found, `Template "${expectedId}" must be registered`)
+
+      const preview = generateGarminPreview(undefined, undefined, undefined, expectedId)
+      assert.ok(preview.svg.includes('viewBox="0 0 260 260"'), `Template ${expectedId} SVG must have 260x260 viewport`)
+      assert.strictEqual(preview.templateUsed, expectedId)
+      assert.ok(preview.metrics.estimatedMemoryKb < 100, `Template ${expectedId} memory must be within budget`)
+      assert.strictEqual(preview.metrics.colorPaletteValid, true)
+    }
+  })
+
+  it('22. garmin_scaffold should support template parameter directly', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-template-scaffold-'))
+    const res = await scaffoldGarminProject({
+      projectDir: tmpDir,
+      appName: 'SportTemplateWatch',
+      template: 'sport'
+    })
+
+    assert.strictEqual(res.success, true)
+    const viewMc = await fs.readFile(path.join(tmpDir, 'source', 'View.mc'), 'utf8')
+    assert.ok(viewMc.includes('SportTemplateWatch') || viewMc.includes('GarminWatchFaceView'))
+    assert.ok(viewMc.includes('Digital Clock'))
+
+    await fs.rm(tmpDir, { recursive: true, force: true })
+  })
 })
+

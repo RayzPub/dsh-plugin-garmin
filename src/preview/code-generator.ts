@@ -1,10 +1,14 @@
 import { WatchFaceSpec, ComplicationItem } from '../preview/watchface-model.js'
 import { snapToClosestMipColor } from '../preview/mip-palette.js'
+import { normalizeWatchFaceSpec } from '../preview/templates.js'
 
 /**
  * Maps a hex color or named color to a Monkey C Toybox.Graphics constant or hex integer literal
  */
-export function toMonkeyCColor(hexOrName: string): string {
+export function toMonkeyCColor(hexOrName?: string | null): string {
+  if (!hexOrName || typeof hexOrName !== 'string') {
+    return 'Graphics.COLOR_WHITE'
+  }
   const snapped = snapToClosestMipColor(hexOrName)
   switch (snapped.name) {
     case 'COLOR_BLACK': return 'Graphics.COLOR_BLACK'
@@ -23,14 +27,15 @@ export function toMonkeyCColor(hexOrName: string): string {
     case 'COLOR_PINK': return 'Graphics.COLOR_PINK'
     default:
       // Return 0xRRGGBB integer literal compatible with Monkey C
-      return `0x${snapped.hex.replace('#', '')}`
+      return `0x${(snapped?.hex || '#FFFFFF').replace('#', '')}`
   }
 }
 
 /**
  * Generates production-ready View.mc Monkey C code directly from a declarative WatchFaceSpec
  */
-export function generateMonkeyCView(spec: WatchFaceSpec): string {
+export function generateMonkeyCView(rawSpec: WatchFaceSpec): string {
+  const { spec } = normalizeWatchFaceSpec(rawSpec)
   const bgColor = toMonkeyCColor(spec.backgroundColor)
   const drawCodeBlocks: string[] = []
 

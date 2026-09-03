@@ -12,6 +12,7 @@ import { ensureDeveloperKey } from './tools/garmin-key.js'
 import { checkGarminEnvironment, setupGarminEnvironment } from './tools/garmin-env.js'
 import { GARMIN_MIP_64_PALETTE } from './preview/mip-palette.js'
 import { WatchFaceSpec } from './preview/watchface-model.js'
+import { listWatchFaceTemplates } from './preview/templates.js'
 
 const nodeRequire = createRequire(import.meta.url)
 
@@ -125,7 +126,14 @@ export function apply(ctx: any) {
                 maxAppMemoryKb: 128,
                 recommendedThresholdKb: 96
               },
-              palette: GARMIN_MIP_64_PALETTE.map(c => ({ name: c.name, hex: c.hex }))
+              palette: GARMIN_MIP_64_PALETTE.map(c => ({ name: c.name, hex: c.hex })),
+              availableTemplates: listWatchFaceTemplates().map(t => ({
+                id: t.id,
+                name: t.name,
+                theme: t.theme,
+                clockType: t.clockType,
+                description: t.description
+              }))
             }
           }
         },
@@ -138,13 +146,17 @@ export function apply(ctx: any) {
       defineTool(
         {
           name: 'garmin_preview',
-          description: 'Render and validate a declarative Garmin Fenix 7 watch face specification in 260x260 SVG and check memory/MIP color budget.',
+          description: 'Render and validate a declarative Garmin Fenix 7 watch face specification in 260x260 SVG and check memory/MIP color budget. Supports built-in templates (tactical, sport, pilot, minimal, hybrid).',
           parameters: {
             spec: {
               type: 'object',
-              required: true,
-              description: 'Declarative WatchFaceSpec object',
+              description: 'Declarative WatchFaceSpec object (optional if template is used, or can be partial)',
               additionalProperties: true
+            },
+            template: {
+              type: 'string',
+              description: 'Optional built-in template name: "tactical" | "sport" | "pilot" | "minimal" | "hybrid". If provided, loads or merges with this template.',
+              enum: ['tactical', 'sport', 'pilot', 'minimal', 'hybrid']
             },
             simulationState: {
               type: 'object',
@@ -159,14 +171,29 @@ export function apply(ctx: any) {
           output: {
             schema: { type: 'object', additionalProperties: true },
             render: (_args: any, value: any) => {
-              const lines = [
-                `[Garmin Fenix 7 Preview Generated] Memory: ${value.metrics?.estimatedMemoryKb}KB / 128KB, MIP Colors Valid: ${value.metrics?.colorPaletteValid}`
-              ]
+              const lines = []
+              if (value.diagnosticInfo?.errors?.length) {
+                lines.push(`⚠️ [Garmin Preview 诊断警告]`)
+                for (const err of value.diagnosticInfo.errors) {
+                  lines.push(`  - ❌ ${err}`)
+                }
+              }
+              if (value.diagnosticInfo?.warnings?.length) {
+                for (const warn of value.diagnosticInfo.warnings) {
+                  lines.push(`  - 💡 ${warn}`)
+                }
+              }
+              if (value.diagnosticInfo?.autoRepaired) {
+                lines.push(`ℹ️ [模板自动兜底] 已自动加载/合并基准模板 "${value.templateUsed || 'tactical'}" 保证预览成功。`)
+              }
+              lines.push(
+                `[Garmin Fenix 7 Preview Generated] 模板: ${value.templateUsed || 'custom'}, 内存预估: ${value.metrics?.estimatedMemoryKb}KB / 128KB, MIP 色彩合规: ${value.metrics?.colorPaletteValid}`
+              )
               if (value.outputPath) {
-                lines.push(`Preview SVG saved to: ${value.outputPath}`)
+                lines.push(`预览 SVG 已保存至: ${value.outputPath}`)
               }
               if (value.metrics?.recommendedFixes?.length) {
-                lines.push(`Fixes/Notes: ${value.metrics.recommendedFixes.join('; ')}`)
+                lines.push(`优化建议: ${value.metrics.recommendedFixes.join('; ')}`)
               }
               return [
                 {
@@ -183,13 +210,19 @@ export function apply(ctx: any) {
               return {
                 svg,
                 metrics: value?.metrics,
-                spec: args?.spec,
-                outputPath: value?.outputPath
+                spec: value?.normalizedSpec || args?.spec,
+                templateUsed: value?.templateUsed,
+                outputPath: value?.outputPath,
+                diagnosticInfo: value?.diagnosticInfo,
+                availableTemplates: ['tactical', 'sport', 'pilot', 'minimal', 'hybrid']
               }
             }
           },
-          async execute(args: { spec: WatchFaceSpec; simulationState?: any; outputPath?: string }, _exec?: any) {
-            return generateGarminPreview(args.spec, args.simulationState, args.outputPath)
+          async execute(
+            args: { spec?: WatchFaceSpec; template?: string; simulationState?: any; outputPath?: string },
+            _exec?: any
+          ) {
+            return generateGarminPreview(args?.spec, args?.simulationState, args?.outputPath, args?.template)
           }
         },
         ctx
@@ -209,6 +242,11 @@ export function apply(ctx: any) {
               type: 'string',
               description: '"analog" | "digital" | "hybrid"',
               enum: ['analog', 'digital', 'hybrid']
+            },
+            template: {
+              type: 'string',
+              description: 'Optional built-in template name: "tactical" | "sport" | "pilot" | "minimal" | "hybrid"',
+              enum: ['tactical', 'sport', 'pilot', 'minimal', 'hybrid']
             },
             spec: {
               type: 'object',
@@ -231,7 +269,8 @@ export function apply(ctx: any) {
               appName: args.appName,
               clockType: args.clockType || 'digital',
               theme: args.spec?.theme || 'sport',
-              spec: args.spec
+              spec: args.spec,
+              template: args.template
             })
           }
         },

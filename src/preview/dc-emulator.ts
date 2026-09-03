@@ -1,14 +1,16 @@
 import { WatchFaceSpec, SimulationState, DEFAULT_SIMULATION_STATE } from './watchface-model.js'
 import { snapToClosestMipColor } from './mip-palette.js'
+import { normalizeWatchFaceSpec } from './templates.js'
 
 /**
  * Renders a WatchFaceSpec into an accurate 260x260 Garmin Fenix 7 SVG.
  * All coordinates adhere to (130, 130) center on 260x260 viewport.
  */
 export function renderWatchFaceToSvg(
-  spec: WatchFaceSpec,
+  rawSpec: WatchFaceSpec,
   state: SimulationState = DEFAULT_SIMULATION_STATE
 ): string {
+  const { spec } = normalizeWatchFaceSpec(rawSpec)
   const width = 260
   const height = 260
   const cx = 130
@@ -34,13 +36,13 @@ export function renderWatchFaceToSvg(
   `)
 
   // 2. Background
-  const bgColor = snapToClosestMipColor(spec.backgroundColor).hex
+  const bgColor = snapToClosestMipColor(spec.backgroundColor, '#000000').hex
   elements.push(`<g clip-path="url(#fenix7-round-clip)" filter="url(#mip-subtle-contrast)">`)
   elements.push(`<rect x="0" y="0" width="${width}" height="${height}" fill="${bgColor}" />`)
 
   // 3. Dial Ticks & Numbers
   if (spec.dial && spec.dial.showTicks) {
-    const tickColor = snapToClosestMipColor(spec.dial.tickColor).hex
+    const tickColor = snapToClosestMipColor(spec.dial.tickColor, '#555555').hex
     const radius = spec.dial.radius || 120
 
     // Draw 60 minute / 12 hour ticks

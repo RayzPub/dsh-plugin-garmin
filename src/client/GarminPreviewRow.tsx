@@ -47,13 +47,30 @@ export function GarminPreviewRow(props: GarminPreviewRowProps) {
 
   // Error state
   if (isError) {
-    const errText = block?.error?.code || '表盘预览生成失败'
+    const errorObj = block?.error
+    const errText =
+      (typeof errorObj === 'string' ? errorObj : null) ||
+      errorObj?.message ||
+      errorObj?.code ||
+      '表盘预览生成失败'
+    const errorDetails = errorObj?.details || errorObj?.stack || null
     return (
       <div style={styles.errorContainer}>
-        <span style={{ fontSize: 16 }}>⚠️</span>
-        <span style={styles.errorText}>
-          [Garmin Preview 错误] {errText}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <span style={{ fontWeight: 600, color: '#f87171', fontSize: 13 }}>
+            [Garmin Preview 渲染失败] {errText}
+          </span>
+        </div>
+        {errorDetails && (
+          <div style={{ fontSize: 12, color: '#fca5a5', marginTop: 4, fontFamily: 'monospace' }}>
+            {typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails)}
+          </div>
+        )}
+        <div style={{ fontSize: 12, color: '#e5e7eb', marginTop: 6, lineHeight: 1.4 }}>
+          💡 <strong>快速修复建议：</strong>
+          推荐使用内置表盘模板快速生成，例如传入 <code>template: "tactical"</code>、<code>"sport"</code> 或 <code>"pilot"</code>，即可确保参数完整并成功渲染。
+        </div>
       </div>
     )
   }
@@ -112,6 +129,12 @@ export function GarminPreviewRow(props: GarminPreviewRowProps) {
             {spec?.name ? `${spec.name}` : 'Garmin Fenix 7 表盘预览'}
           </span>
           <span style={styles.deviceBadge}>Fenix 7 · 260×260 MIP</span>
+          {meta?.templateUsed && (
+            <span style={styles.templateBadge}>
+              🎨 {meta.templateUsed}
+              {meta?.diagnosticInfo?.autoRepaired ? ' (已兜底)' : ''}
+            </span>
+          )}
         </div>
 
         <div style={styles.headerRight}>
@@ -207,19 +230,23 @@ export function GarminPreviewRow(props: GarminPreviewRowProps) {
             )}
           </div>
 
-          {metrics?.recommendedFixes && metrics.recommendedFixes.length > 0 && (
+          {((metrics?.recommendedFixes && metrics.recommendedFixes.length > 0) ||
+            (meta?.diagnosticInfo?.warnings && meta.diagnosticInfo.warnings.length > 0)) && (
             <div style={styles.fixesContainer}>
               <div
                 style={styles.fixesHeader}
                 onClick={() => setShowDetails(!showDetails)}
               >
-                <span>💡 硬件规范优化建议 ({metrics.recommendedFixes.length})</span>
+                <span>💡 诊断与规范建议 ({((metrics?.recommendedFixes?.length || 0) + (meta?.diagnosticInfo?.warnings?.length || 0))})</span>
                 <span style={{ fontSize: 11 }}>{showDetails ? '收起 ▲' : '展开 ▼'}</span>
               </div>
               {showDetails && (
                 <ul style={styles.fixesList}>
-                  {metrics.recommendedFixes.map((fix: string, idx: number) => (
-                    <li key={idx} style={styles.fixItem}>{fix}</li>
+                  {meta?.diagnosticInfo?.warnings?.map((w: string, idx: number) => (
+                    <li key={`warn-${idx}`} style={{ ...styles.fixItem, color: '#60a5fa' }}>ℹ️ {w}</li>
+                  ))}
+                  {metrics?.recommendedFixes?.map((fix: string, idx: number) => (
+                    <li key={`fix-${idx}`} style={styles.fixItem}>💡 {fix}</li>
                   ))}
                 </ul>
               )}
@@ -242,13 +269,21 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10
   },
   errorContainer: {
-    padding: '10px 14px',
+    padding: '12px 16px',
     borderRadius: 8,
     background: 'rgba(239, 68, 68, 0.1)',
     border: '1px solid rgba(239, 68, 68, 0.3)',
     display: 'flex',
-    alignItems: 'center',
-    gap: 10
+    flexDirection: 'column',
+    gap: 6
+  },
+  templateBadge: {
+    fontSize: 11,
+    padding: '2px 7px',
+    borderRadius: 10,
+    background: 'rgba(59, 130, 246, 0.15)',
+    color: '#60a5fa',
+    border: '1px solid rgba(59, 130, 246, 0.3)'
   },
   runningText: {
     fontSize: 13,
