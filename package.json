@@ -23,9 +23,15 @@
   "files": [
     "dist",
     "src/web",
+    "cordis.patch.yml",
     "README.md",
     "LICENSE"
   ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
