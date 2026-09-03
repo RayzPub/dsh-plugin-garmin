@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import * as zlib from 'node:zlib'
 import { WatchFaceSpec } from '../preview/watchface-model.js'
 import { generateMonkeyCView } from '../preview/code-generator.js'
 
@@ -9,6 +10,95 @@ export interface ScaffoldOptions {
   clockType?: 'analog' | 'digital' | 'hybrid'
   theme?: string
   spec?: WatchFaceSpec
+}
+
+function crc32(buf: Buffer): number {
+  let crc = 0xffffffff
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i]
+    for (let j = 0; j < 8; j++) {
+      crc = (crc >>> 1) ^ (-(crc & 1) & 0xedb88320)
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0
+}
+
+function createPngChunk(type: string, data: Buffer): Buffer {
+  const len = Buffer.alloc(4)
+  len.writeUInt32BE(data.length, 0)
+  const typeBuf = Buffer.from(type, 'ascii')
+  const body = Buffer.concat([typeBuf, data])
+  const crcBuf = Buffer.alloc(4)
+  crcBuf.writeUInt32BE(crc32(body), 0)
+  return Buffer.concat([len, body, crcBuf])
+}
+
+/**
+ * Generates a valid 30x30 RGBA PNG launcher icon matching Garmin Connect IQ standards
+ */
+export function generateLauncherIconPng(): Buffer {
+  const width = 30
+  const height = 30
+  const rowLen = 1 + width * 4
+  const raw = Buffer.alloc(rowLen * height)
+
+  for (let y = 0; y < height; y++) {
+    const rowOffset = y * rowLen
+    raw[rowOffset] = 0 // filter: none
+    for (let x = 0; x < width; x++) {
+      const pxOffset = rowOffset + 1 + x * 4
+      const dx = x - 15
+      const dy = y - 15
+      const distSq = dx * dx + dy * dy
+
+      if (distSq <= 12 * 12) {
+        if (distSq <= 10 * 10 && (x === 15 || y === 15)) {
+          // Tactical orange crosshair accent
+          raw[pxOffset] = 255
+          raw[pxOffset + 1] = 170
+          raw[pxOffset + 2] = 0
+          raw[pxOffset + 3] = 255
+        } else {
+          // Dial background
+          raw[pxOffset] = 25
+          raw[pxOffset + 1] = 25
+          raw[pxOffset + 2] = 25
+          raw[pxOffset + 3] = 255
+        }
+      } else if (distSq <= 14 * 14) {
+        // Metallic bezel
+        raw[pxOffset] = 100
+        raw[pxOffset + 1] = 100
+        raw[pxOffset + 2] = 100
+        raw[pxOffset + 3] = 255
+      } else {
+        // Transparent corner
+        raw[pxOffset] = 0
+        raw[pxOffset + 1] = 0
+        raw[pxOffset + 2] = 0
+        raw[pxOffset + 3] = 0
+      }
+    }
+  }
+
+  const ihdr = Buffer.alloc(13)
+  ihdr.writeUInt32BE(width, 0)
+  ihdr.writeUInt32BE(height, 4)
+  ihdr.writeUInt8(8, 8)  // bit depth 8
+  ihdr.writeUInt8(6, 9)  // color type 6: RGBA
+  ihdr.writeUInt8(0, 10) // compression 0
+  ihdr.writeUInt8(0, 11) // filter 0
+  ihdr.writeUInt8(0, 12) // interlace 0
+
+  const compressedIdat = zlib.deflateSync(raw)
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+  return Buffer.concat([
+    signature,
+    createPngChunk('IHDR', ihdr),
+    createPngChunk('IDAT', compressedIdat),
+    createPngChunk('IEND', Buffer.alloc(0))
+  ])
 }
 
 export async function scaffoldGarminProject(options: ScaffoldOptions): Promise<{ success: boolean; filesCreated: string[] }> {
@@ -34,7 +124,6 @@ export async function scaffoldGarminProject(options: ScaffoldOptions): Promise<{
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="SensorHistory"/>
-            <iq:uses-permission id="ActivityMonitor"/>
         </iq:permissions>
     </iq:application>
 </iq:manifest>
@@ -56,7 +145,19 @@ export async function scaffoldGarminProject(options: ScaffoldOptions): Promise<{
   await fs.writeFile(path.join(root, 'resources', 'strings', 'strings.xml'), stringsXml)
   filesCreated.push('resources/strings/strings.xml')
 
-  // 4. source/App.mc
+  // 4. resources/drawables/drawables.xml and launcher_icon.png
+  const drawablesXml = `<drawables>
+    <bitmap id="LauncherIcon" filename="launcher_icon.png" />
+</drawables>
+`
+  await fs.writeFile(path.join(root, 'resources', 'drawables', 'drawables.xml'), drawablesXml)
+  filesCreated.push('resources/drawables/drawables.xml')
+
+  const iconPng = generateLauncherIconPng()
+  await fs.writeFile(path.join(root, 'resources', 'drawables', 'launcher_icon.png'), iconPng)
+  filesCreated.push('resources/drawables/launcher_icon.png')
+
+  // 5. source/App.mc
   const appMc = `import Toybox.Application;
 import Toybox.Lang;
 import Toybox.WatchUi;

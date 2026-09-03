@@ -84,7 +84,6 @@ export function generateMonkeyCView(spec: WatchFaceSpec): string {
 
     drawCodeBlocks.push(`
         // --- Digital Clock ---
-        var clockTime = System.getClockTime();
         var timeStr = Lang.format("$1$:$2$", [clockTime.hour.format("%02d"), clockTime.min.format("%02d")]);
         dc.setColor(${dColor}, Graphics.COLOR_TRANSPARENT);
         dc.drawText(${dc.x}, ${dc.y}, ${font}, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
@@ -94,9 +93,9 @@ export function generateMonkeyCView(spec: WatchFaceSpec): string {
         }`)
   }
 
-  // 3. Complications
-  for (const comp of spec.complications) {
-    drawCodeBlocks.push(generateComplicationCode(comp))
+  // 3. Complications (with deduplicated variable names per index)
+  for (let i = 0; i < spec.complications.length; i++) {
+    drawCodeBlocks.push(generateComplicationCode(spec.complications[i], i))
   }
 
   // 4. Analog Hands
@@ -105,27 +104,38 @@ export function generateMonkeyCView(spec: WatchFaceSpec): string {
     const hColor = toMonkeyCColor(hands.hourColor)
     const mColor = toMonkeyCColor(hands.minuteColor)
     const sColor = toMonkeyCColor(hands.secondColor)
+    const showHour = hands.showHourHand !== false
+    const showMinute = hands.showMinuteHand !== false
+    const showSecond = hands.showSecondHand !== false
 
-    drawCodeBlocks.push(`
-        // --- Analog Hands ---
-        var clockTime = System.getClockTime();
-        var hAngle = ((clockTime.hour % 12 + clockTime.min / 60.0) * 30.0 * Math.PI) / 180.0;
-        var mAngle = ((clockTime.min + clockTime.sec / 60.0) * 6.0 * Math.PI) / 180.0;
+    const handsCode: string[] = [
+      `        // --- Analog Hands ---`,
+      `        var hAngle = ((clockTime.hour % 12 + clockTime.min / 60.0) * 30.0 * Math.PI) / 180.0;`,
+      `        var mAngle = ((clockTime.min + clockTime.sec / 60.0) * 6.0 * Math.PI) / 180.0;`
+    ]
 
+    if (showHour) {
+      handsCode.push(`
         // Hour Hand
         var hx = cx + ${hands.hourLength} * Math.sin(hAngle);
         var hy = cy - ${hands.hourLength} * Math.cos(hAngle);
         dc.setColor(${hColor}, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(${hands.hourWidth});
-        dc.drawLine(cx, cy, hx, hy);
+        dc.drawLine(cx, cy, hx, hy);`)
+    }
 
+    if (showMinute) {
+      handsCode.push(`
         // Minute Hand
         var mx = cx + ${hands.minuteLength} * Math.sin(mAngle);
         var my = cy - ${hands.minuteLength} * Math.cos(mAngle);
         dc.setColor(${mColor}, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(${hands.minuteWidth});
-        dc.drawLine(cx, cy, mx, my);
+        dc.drawLine(cx, cy, mx, my);`)
+    }
 
+    if (showSecond) {
+      handsCode.push(`
         // Second Hand (active only in high power / awake mode)
         if (!_isSleep) {
             var sAngle = (clockTime.sec * 6.0 * Math.PI) / 180.0;
@@ -141,6 +151,14 @@ export function generateMonkeyCView(spec: WatchFaceSpec): string {
             dc.setColor(${mColor}, Graphics.COLOR_TRANSPARENT);
             dc.fillCircle(cx, cy, 4);
         }`)
+    } else if (showHour || showMinute) {
+      handsCode.push(`
+        // Pin Center
+        dc.setColor(${mColor}, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(cx, cy, 4);`)
+    }
+
+    drawCodeBlocks.push(handsCode.join('\n'))
   }
 
   return `import Toybox.Graphics;
@@ -175,6 +193,9 @@ class GarminWatchFaceView extends WatchUi.WatchFace {
 
         var cx = _screenCenter;
         var cy = _screenCenter;
+        var clockTime = System.getClockTime();
+        var sysStats = System.getSystemStats();
+        var actInfo = ActivityMonitor.getInfo();
 ${drawCodeBlocks.join('\n')}
     }
 
@@ -194,7 +215,7 @@ ${drawCodeBlocks.join('\n')}
 `
 }
 
-function generateComplicationCode(comp: ComplicationItem): string {
+function generateComplicationCode(comp: ComplicationItem, index: number): string {
   const color = toMonkeyCColor(comp.color)
   const px = comp.position.x
   const py = comp.position.y
@@ -202,58 +223,54 @@ function generateComplicationCode(comp: ComplicationItem): string {
   switch (comp.type) {
     case 'heart_rate':
       return `
-        // Complication: Heart Rate
-        var hrStr = "--";
-        var info = ActivityMonitor.getInfo();
-        if (info has :heartRate && info.heartRate != null && info.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
-            hrStr = info.heartRate.toString();
+        // Complication: Heart Rate (#${index + 1})
+        var hrStr_${index} = "--";
+        if (actInfo has :heartRate && actInfo.heartRate != null && actInfo.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
+            hrStr_${index} = actInfo.heartRate.toString();
         }
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "HR " + hrStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "HR " + hrStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'battery':
       return `
-        // Complication: Battery
-        var sysStats = System.getSystemStats();
-        var bat = (sysStats != null && sysStats.battery != null) ? sysStats.battery.toNumber() : 0;
-        var batCol = (bat <= 20) ? Graphics.COLOR_RED : ${color};
-        dc.setColor(batCol, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, bat.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+        // Complication: Battery (#${index + 1})
+        var bat_${index} = (sysStats != null && sysStats.battery != null) ? sysStats.battery.toNumber() : 0;
+        var batCol_${index} = (bat_${index} <= 20) ? Graphics.COLOR_RED : ${color};
+        dc.setColor(batCol_${index}, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, bat_${index}.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'steps':
       return `
-        // Complication: Steps
-        var stepCount = 0;
-        var actInfo = ActivityMonitor.getInfo();
+        // Complication: Steps (#${index + 1})
+        var stepCount_${index} = 0;
         if (actInfo != null && actInfo.steps != null) {
-            stepCount = actInfo.steps;
+            stepCount_${index} = actInfo.steps;
         }
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "STP " + stepCount.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "STP " + stepCount_${index}.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'date':
       return `
-        // Complication: Date
-        var now = Time.now();
-        var dateInfo = Gregorian.info(now, Time.FORMAT_SHORT);
-        var dateStr = Lang.format("$1$/$2$", [dateInfo.month.format("%02d"), dateInfo.day.format("%02d")]);
+        // Complication: Date (#${index + 1})
+        var now_${index} = Time.now();
+        var dateInfo_${index} = Gregorian.info(now_${index}, Time.FORMAT_SHORT);
+        var dateStr_${index} = Lang.format("$1$/$2$", [dateInfo_${index}.month.format("%02d"), dateInfo_${index}.day.format("%02d")]);
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, dateStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, dateStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'calories':
       return `
-        // Complication: Calories
-        var cal = 0;
-        var calInfo = ActivityMonitor.getInfo();
-        if (calInfo != null && calInfo.calories != null) {
-            cal = calInfo.calories;
+        // Complication: Calories (#${index + 1})
+        var cal_${index} = 0;
+        if (actInfo != null && actInfo.calories != null) {
+            cal_${index} = actInfo.calories;
         }
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "CAL " + cal.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "CAL " + cal_${index}.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     default:
       return `
-        // Complication: generic
+        // Complication: generic (#${index + 1})
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
         dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "${comp.id}", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
   }

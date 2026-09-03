@@ -12,10 +12,15 @@
       "import": "./dist/src/index.js",
       "default": "./dist/src/index.js"
     },
+    "./client": {
+      "types": "./dist/src/client/index.d.ts",
+      "import": "./dist/src/client/index.js",
+      "default": "./dist/src/client/index.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc && node -e \"import('node:fs').then(fs => { fs.writeFileSync('dist/index.js', 'export * from \\\"./src/index.js\\\";\\nexport { apply as default } from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/index.d.ts', 'export * from \\\"./src/index.js\\\";\\n'); })\"",
+    "build": "tsc && node -e \"import('node:fs').then(fs => { fs.writeFileSync('dist/index.js', 'export * from \\\"./src/index.js\\\";\\nexport { apply as default } from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/index.d.ts', 'export * from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/client.js', 'export * from \\\"./src/client/index.js\\\";\\nexport { apply as default } from \\\"./src/client/index.js\\\";\\n'); fs.writeFileSync('dist/client.d.ts', 'export * from \\\"./src/client/index.js\\\";\\n'); })\"",
     "prepare": "npm run build",
     "test": "npm run build && node --test dist/test/*.js",
     "prepublishOnly": "npm test"
@@ -30,6 +35,12 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ],
+      "platform": "web"
     }
   },
   "keywords": [
@@ -45,9 +56,10 @@
   "author": "DeepSeek Harness Community",
   "license": "MIT",
   "peerDependencies": {
-    "cordis": ">=3.0.0 || >=4.0.0",
     "@deepseek-ai/cordis": ">=3.0.0 || >=4.0.0",
-    "@deepseek-ai/dsh-tools": ">=0.0.1-rc.1"
+    "@deepseek-ai/dsh-tools": ">=0.0.1-rc.1",
+    "cordis": ">=3.0.0 || >=4.0.0",
+    "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {
     "cordis": {
@@ -58,10 +70,15 @@
     },
     "@deepseek-ai/dsh-tools": {
       "optional": true
+    },
+    "react": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "react": "^19.2.8",
     "typescript": "^5.8.0"
   }
 }

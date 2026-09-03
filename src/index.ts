@@ -150,29 +150,46 @@ export function apply(ctx: any) {
               type: 'object',
               description: 'Optional state overrides (hours, minutes, heartRate, steps, battery, isSleepMode)',
               additionalProperties: true
+            },
+            outputPath: {
+              type: 'string',
+              description: 'Optional file path to save the rendered SVG directly to disk (e.g. "./preview.svg")'
             }
           },
           output: {
             schema: { type: 'object', additionalProperties: true },
-            render: (_args: any, value: any) => [
-              {
-                type: 'text',
-                text: `[Garmin Fenix 7 Preview Generated] Memory: ${value.metrics?.estimatedMemoryKb}KB / 128KB, MIP Colors Valid: ${value.metrics?.colorPaletteValid}`
+            render: (_args: any, value: any) => {
+              const lines = [
+                `[Garmin Fenix 7 Preview Generated] Memory: ${value.metrics?.estimatedMemoryKb}KB / 128KB, MIP Colors Valid: ${value.metrics?.colorPaletteValid}`
+              ]
+              if (value.outputPath) {
+                lines.push(`Preview SVG saved to: ${value.outputPath}`)
               }
-            ],
-            presentationMeta: (_args: any, value: any) => {
+              if (value.metrics?.recommendedFixes?.length) {
+                lines.push(`Fixes/Notes: ${value.metrics.recommendedFixes.join('; ')}`)
+              }
+              return [
+                {
+                  type: 'text',
+                  text: lines.join('\n')
+                }
+              ]
+            },
+            presentationMeta: (args: any, value: any) => {
               const svg =
                 typeof value?.svg === 'string' && value.svg.length <= MAX_PRESENTATION_SVG_BYTES
                   ? value.svg
                   : undefined
               return {
                 svg,
-                metrics: value?.metrics
+                metrics: value?.metrics,
+                spec: args?.spec,
+                outputPath: value?.outputPath
               }
             }
           },
-          async execute(args: { spec: WatchFaceSpec; simulationState?: any }, _exec?: any) {
-            return generateGarminPreview(args.spec, args.simulationState)
+          async execute(args: { spec: WatchFaceSpec; simulationState?: any; outputPath?: string }, _exec?: any) {
+            return generateGarminPreview(args.spec, args.simulationState, args.outputPath)
           }
         },
         ctx

@@ -171,21 +171,25 @@ export function renderWatchFaceToSvg(
     const sAngle = (state.seconds * 6 * Math.PI) / 180
 
     // Hour Hand
-    const hx2 = cx + hands.hourLength * Math.sin(hAngle)
-    const hy2 = cy - hands.hourLength * Math.cos(hAngle)
-    const hTailX = hands.accentTail ? cx - 12 * Math.sin(hAngle) : cx
-    const hTailY = hands.accentTail ? cy + 12 * Math.cos(hAngle) : cy
-    elements.push(`<line x1="${hTailX.toFixed(1)}" y1="${hTailY.toFixed(1)}" x2="${hx2.toFixed(1)}" y2="${hy2.toFixed(1)}" stroke="${hColor}" stroke-width="${hands.hourWidth}" stroke-linecap="round"/>`)
+    if (hands.showHourHand !== false) {
+      const hx2 = cx + hands.hourLength * Math.sin(hAngle)
+      const hy2 = cy - hands.hourLength * Math.cos(hAngle)
+      const hTailX = hands.accentTail ? cx - 12 * Math.sin(hAngle) : cx
+      const hTailY = hands.accentTail ? cy + 12 * Math.cos(hAngle) : cy
+      elements.push(`<line x1="${hTailX.toFixed(1)}" y1="${hTailY.toFixed(1)}" x2="${hx2.toFixed(1)}" y2="${hy2.toFixed(1)}" stroke="${hColor}" stroke-width="${hands.hourWidth}" stroke-linecap="round"/>`)
+    }
 
     // Minute Hand
-    const mx2 = cx + hands.minuteLength * Math.sin(mAngle)
-    const my2 = cy - hands.minuteLength * Math.cos(mAngle)
-    const mTailX = hands.accentTail ? cx - 16 * Math.sin(mAngle) : cx
-    const mTailY = hands.accentTail ? cy + 16 * Math.cos(mAngle) : cy
-    elements.push(`<line x1="${mTailX.toFixed(1)}" y1="${mTailY.toFixed(1)}" x2="${mx2.toFixed(1)}" y2="${my2.toFixed(1)}" stroke="${mColor}" stroke-width="${hands.minuteWidth}" stroke-linecap="round"/>`)
+    if (hands.showMinuteHand !== false) {
+      const mx2 = cx + hands.minuteLength * Math.sin(mAngle)
+      const my2 = cy - hands.minuteLength * Math.cos(mAngle)
+      const mTailX = hands.accentTail ? cx - 16 * Math.sin(mAngle) : cx
+      const mTailY = hands.accentTail ? cy + 16 * Math.cos(mAngle) : cy
+      elements.push(`<line x1="${mTailX.toFixed(1)}" y1="${mTailY.toFixed(1)}" x2="${mx2.toFixed(1)}" y2="${my2.toFixed(1)}" stroke="${mColor}" stroke-width="${hands.minuteWidth}" stroke-linecap="round"/>`)
+    }
 
     // Second Hand (Only in high-power mode or 1Hz partial update)
-    if (!state.isSleepMode) {
+    if (hands.showSecondHand !== false && !state.isSleepMode) {
       const sx2 = cx + hands.secondLength * Math.sin(sAngle)
       const sy2 = cy - hands.secondLength * Math.cos(sAngle)
       const sTailX = cx - 22 * Math.sin(sAngle)

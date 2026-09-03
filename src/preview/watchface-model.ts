@@ -37,6 +37,9 @@ export interface AnalogHandsConfig {
   minuteWidth: number // e.g. 3
   secondWidth: number // e.g. 1
   accentTail: boolean
+  showHourHand?: boolean
+  showMinuteHand?: boolean
+  showSecondHand?: boolean
 }
 
 export interface ComplicationItem {

@@ -11,11 +11,11 @@ const execFileAsync = promisify(execFile)
 export interface EnvironmentStatus {
   ready: boolean
   javaInstalled: boolean
-  javaVersion?: string
+  javaVersion: string | null
   developerKeyExists: boolean
-  developerKeyPath?: string
+  developerKeyPath: string | null
   monkeycInstalled: boolean
-  monkeycPath?: string
+  monkeycPath: string | null
   deviceDefinitionsReady: boolean
   summary: string
   actionItems: string[]
@@ -25,7 +25,7 @@ export interface SetupResult {
   success: boolean
   stepsCompleted: string[]
   logs: string[]
-  error?: string
+  error: string | null
 }
 
 /**
@@ -92,11 +92,11 @@ export async function checkGarminEnvironment(customSdkPath?: string): Promise<En
   return {
     ready,
     javaInstalled,
-    javaVersion,
+    javaVersion: javaVersion || null,
     developerKeyExists,
-    developerKeyPath: developerKeyExists ? defaultKeyPath : undefined,
+    developerKeyPath: developerKeyExists ? defaultKeyPath : null,
     monkeycInstalled,
-    monkeycPath: monkeycPath || undefined,
+    monkeycPath: monkeycPath || null,
     deviceDefinitionsReady,
     summary,
     actionItems
@@ -144,7 +144,8 @@ export async function setupGarminEnvironment(options?: { customSdkPath?: string 
     return {
       success: true,
       stepsCompleted,
-      logs
+      logs,
+      error: null
     }
   } catch (err: any) {
     return {

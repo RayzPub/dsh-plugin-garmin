@@ -1,9 +1,12 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { WatchFaceSpec, DEFAULT_SIMULATION_STATE, SimulationState } from '../preview/watchface-model.js'
 import { renderWatchFaceToSvg } from '../preview/dc-emulator.js'
 import { isExactMipColor, snapToClosestMipColor } from '../preview/mip-palette.js'
 
 export interface PreviewResult {
   svg: string
+  outputPath?: string
   metrics: {
     estimatedMemoryKb: number
     maxMemoryKb: number
@@ -13,9 +16,19 @@ export interface PreviewResult {
   }
 }
 
-export function generateGarminPreview(spec: WatchFaceSpec, stateOverrides?: Partial<SimulationState>): PreviewResult {
+export function generateGarminPreview(
+  spec: WatchFaceSpec,
+  stateOverrides?: Partial<SimulationState>,
+  outputPath?: string
+): PreviewResult {
   const state: SimulationState = { ...DEFAULT_SIMULATION_STATE, ...(stateOverrides || {}) }
   const svg = renderWatchFaceToSvg(spec, state)
+
+  if (outputPath) {
+    const resolvedPath = path.resolve(outputPath)
+    fs.mkdirSync(path.dirname(resolvedPath), { recursive: true })
+    fs.writeFileSync(resolvedPath, svg, 'utf8')
+  }
 
   // Validate MIP palette
   const allColors = [
@@ -50,6 +63,7 @@ export function generateGarminPreview(spec: WatchFaceSpec, stateOverrides?: Part
 
   return {
     svg,
+    outputPath: outputPath ? path.resolve(outputPath) : undefined,
     metrics: {
       estimatedMemoryKb: Math.round(estimatedMemoryKb * 10) / 10,
       maxMemoryKb: 128,

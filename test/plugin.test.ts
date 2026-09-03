@@ -315,4 +315,197 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
 
     assert.strictEqual(violations.length, 0, `Forbidden exec() calls found:\n${violations.join('\n')}`)
   })
+
+  it('11. garmin_env outputs must be lossless JSON (no undefined properties)', async () => {
+    const { checkGarminEnvironment, setupGarminEnvironment } = await import('../src/tools/garmin-env.js')
+    const status = await checkGarminEnvironment()
+
+    // Assert no undefined values in status
+    for (const [k, v] of Object.entries(status)) {
+      assert.notStrictEqual(v, undefined, `Property ${k} in checkGarminEnvironment must not be undefined`)
+    }
+    const statusJson = JSON.stringify(status)
+    const statusParsed = JSON.parse(statusJson)
+    assert.deepStrictEqual(Object.keys(statusParsed).sort(), Object.keys(status).sort())
+
+    const setup = await setupGarminEnvironment()
+    for (const [k, v] of Object.entries(setup)) {
+      assert.notStrictEqual(v, undefined, `Property ${k} in setupGarminEnvironment must not be undefined`)
+    }
+    const setupJson = JSON.stringify(setup)
+    const setupParsed = JSON.parse(setupJson)
+    assert.deepStrictEqual(Object.keys(setupParsed).sort(), Object.keys(setup).sort())
+  })
+
+  it('12. garmin-scaffold must produce valid drawables.xml, launcher_icon.png (30x30), and clean manifest.xml', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-scaffold-drawables-'))
+    const res = await scaffoldGarminProject({
+      projectDir: tmpDir,
+      appName: 'IconTestApp',
+      clockType: 'digital'
+    })
+
+    assert.strictEqual(res.success, true)
+    assert.ok(res.filesCreated.includes('resources/drawables/drawables.xml'))
+    assert.ok(res.filesCreated.includes('resources/drawables/launcher_icon.png'))
+
+    // Verify manifest.xml contains NO invalid ActivityMonitor permission
+    const manifest = await fs.readFile(path.join(tmpDir, 'manifest.xml'), 'utf8')
+    assert.ok(!manifest.includes('ActivityMonitor'), 'manifest.xml must not include invalid ActivityMonitor permission')
+    assert.ok(manifest.includes('launcherIcon="@Drawables.LauncherIcon"'))
+
+    // Verify drawables.xml
+    const drawables = await fs.readFile(path.join(tmpDir, 'resources', 'drawables', 'drawables.xml'), 'utf8')
+    assert.ok(drawables.includes('id="LauncherIcon"'))
+    assert.ok(drawables.includes('filename="launcher_icon.png"'))
+
+    // Verify launcher_icon.png has valid 30x30 PNG header
+    const iconBuf = await fs.readFile(path.join(tmpDir, 'resources', 'drawables', 'launcher_icon.png'))
+    assert.strictEqual(iconBuf[0], 0x89)
+    assert.strictEqual(iconBuf[1], 0x50) // 'P'
+    assert.strictEqual(iconBuf[2], 0x4e) // 'N'
+    assert.strictEqual(iconBuf[3], 0x47) // 'G'
+    // IHDR dimensions at offset 16 (width) and 20 (height)
+    assert.strictEqual(iconBuf.readUInt32BE(16), 30, 'Width must be 30')
+    assert.strictEqual(iconBuf.readUInt32BE(20), 30, 'Height must be 30')
+
+    await fs.rm(tmpDir, { recursive: true, force: true })
+  })
+
+  it('13. code-generator must deduplicate variable declarations when multiple complications share data', async () => {
+    const { generateMonkeyCView } = await import('../src/preview/code-generator.js')
+    const multiCompSpec: WatchFaceSpec = {
+      name: 'MultiStepTest',
+      theme: 'sport',
+      targetDevice: 'fenix7',
+      backgroundColor: '#000000',
+      clockType: 'hybrid',
+      digitalClock: {
+        x: 130,
+        y: 80,
+        font: 'LARGE',
+        color: '#FFFFFF',
+        showSeconds: true,
+        showAmPm: false
+      },
+      analogHands: {
+        hourColor: '#FFFFFF',
+        minuteColor: '#00AAFF',
+        secondColor: '#FF0000',
+        hourLength: 50,
+        minuteLength: 70,
+        secondLength: 85,
+        hourWidth: 3,
+        minuteWidth: 2,
+        secondWidth: 1,
+        accentTail: false
+      },
+      complications: [
+        { id: 'step1', type: 'steps', position: { x: 70, y: 130 }, style: 'arc_progress', color: '#00AAFF' },
+        { id: 'step2', type: 'steps', position: { x: 190, y: 130 }, style: 'badge', color: '#00FFAA' },
+        { id: 'cal1', type: 'calories', position: { x: 130, y: 170 }, style: 'badge', color: '#FFAA00' },
+        { id: 'cal2', type: 'calories', position: { x: 130, y: 200 }, style: 'badge', color: '#FF5500' }
+      ]
+    }
+
+    const mcCode = generateMonkeyCView(multiCompSpec)
+
+    // Verify clockTime and actInfo are declared once
+    const clockTimeMatches = mcCode.match(/var clockTime\s*=/g)
+    assert.strictEqual(clockTimeMatches?.length, 1, 'var clockTime must only be declared once in onUpdate')
+
+    const actInfoMatches = mcCode.match(/var actInfo\s*=/g)
+    assert.strictEqual(actInfoMatches?.length, 1, 'var actInfo must only be declared once in onUpdate')
+
+    // Verify indexed variable names for complications
+    assert.ok(mcCode.includes('stepCount_0'))
+    assert.ok(mcCode.includes('stepCount_1'))
+    assert.ok(mcCode.includes('cal_2'))
+    assert.ok(mcCode.includes('cal_3'))
+  })
+
+  it('14. analog hands visibility flags (showHourHand, showMinuteHand, showSecondHand) must cleanly omit hands', async () => {
+    const { generateMonkeyCView } = await import('../src/preview/code-generator.js')
+    const { renderWatchFaceToSvg } = await import('../src/preview/dc-emulator.js')
+
+    const noHandsSpec: WatchFaceSpec = {
+      name: 'NoHandsTest',
+      theme: 'minimal',
+      targetDevice: 'fenix7',
+      backgroundColor: '#000000',
+      clockType: 'analog',
+      analogHands: {
+        hourColor: '#FFFFFF',
+        minuteColor: '#FFFFFF',
+        secondColor: '#FF0000',
+        hourLength: 50,
+        minuteLength: 80,
+        secondLength: 90,
+        hourWidth: 3,
+        minuteWidth: 2,
+        secondWidth: 1,
+        accentTail: false,
+        showHourHand: false,
+        showMinuteHand: false,
+        showSecondHand: false
+      },
+      complications: []
+    }
+
+    const svg = renderWatchFaceToSvg(noHandsSpec, {
+      hours: 10, minutes: 10, seconds: 30, heartRate: 70, batteryPercent: 80,
+      steps: 5000, stepGoal: 10000, calories: 300, altitudeMeters: 100,
+      dateString: '10-24', dayOfWeek: 'WED', isSleepMode: false
+    })
+
+    // SVG should NOT have <line elements for hands
+    assert.ok(!svg.includes('<line'), 'SVG must omit all hands lines when all hands are hidden and dial is off')
+
+    const mcCode = generateMonkeyCView(noHandsSpec)
+    assert.ok(!mcCode.includes('Hour Hand'), 'Monkey C code must cleanly omit hour hand')
+    assert.ok(!mcCode.includes('Minute Hand'), 'Monkey C code must cleanly omit minute hand')
+    assert.ok(!mcCode.includes('Second Hand'), 'Monkey C code must cleanly omit second hand')
+  })
+
+  it('15. garmin_preview outputPath must save file to disk and return path', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-preview-output-'))
+    const targetSvg = path.join(tmpDir, 'output.svg')
+
+    const res = generateGarminPreview(sampleSpec, undefined, targetSvg)
+    assert.strictEqual(res.outputPath, path.resolve(targetSvg))
+
+    const exists = await fs.readFile(targetSvg, 'utf8')
+    assert.ok(exists.includes('<svg'))
+    assert.ok(exists.includes('fenix7-round-clip'))
+
+    await fs.rm(tmpDir, { recursive: true, force: true })
+  })
+
+  it('16. client plugin entrypoint must export apply and register garmin_preview toolview', async () => {
+    const clientModule = await import('../src/client/index.js')
+    assert.strictEqual(clientModule.name, 'plugin-garmin-client')
+    assert.deepStrictEqual(clientModule.inject, ['slots'])
+
+    let registeredSlotName = ''
+    let registeredKey = ''
+    let registeredComponent: any = null
+
+    const mockClientCtx = {
+      slots: {
+        inject(slotName: string, cb: () => void) {
+          registeredSlotName = slotName
+          cb()
+        },
+        register(opts: { name: string; key: string }, comp: any) {
+          registeredKey = opts.key
+          registeredComponent = comp
+        }
+      }
+    }
+
+    clientModule.apply(mockClientCtx)
+    assert.strictEqual(registeredSlotName, 'tool.call.toolview')
+    assert.strictEqual(registeredKey, 'garmin_preview')
+    assert.strictEqual(typeof registeredComponent, 'function')
+  })
 })
