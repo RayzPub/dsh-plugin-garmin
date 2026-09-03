@@ -508,4 +508,13 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
     assert.strictEqual(registeredKey, 'garmin_preview')
     assert.strictEqual(typeof registeredComponent, 'function')
   })
+
+  it('17. bundled dist/client.js must register with window.__ModuleLoader__.load', async () => {
+    const bundleCode = await fs.readFile(path.join(process.cwd(), 'dist/client.js'), 'utf8')
+    assert.ok(bundleCode.includes('window.__ModuleLoader__.load'))
+    assert.ok(bundleCode.includes('dsh-plugin-garmin'))
+    // Verify no top-level raw ESM export statements that would break classic script combo
+    assert.ok(!bundleCode.startsWith('export '))
+    assert.ok(!bundleCode.includes('\nexport '))
+  })
 })

@@ -26,44 +26,147 @@
 
 ## 🚀 快速上手
 
-### 1. 安装插件
+### 1. 源码编译与安装到 dsh
 
-在你的 DeepSeek Harness (dsh) 项目根目录下安装：
+目前本插件**仅支持源码安装**（npm 包尚未发布）。安装步骤包含“本地编译”与“挂载到 dsh”两步：
+
+#### 第一步：克隆仓库并编译源码
+
+插件采用 TypeScript 开发，需要先编译生成 `dist/` 运行产物：
 
 ```bash
-npm install dsh-plugin-garmin
+# 1. 克隆插件仓库
+git clone https://github.com/your-org/dsh-plugin-garmin.git
+cd dsh-plugin-garmin
+
+# 2. 安装依赖并编译构建（会生成 dist/ 目录）
+npm install
+npm run build
 ```
 
-或在 `dsh.config.ts` / 插件配置中载入：
+#### 第二步：挂载进 DeepSeek Harness
 
-```typescript
-import * as GarminPlugin from 'dsh-plugin-garmin'
+DeepSeek Harness 基于 **Profile 机制**，你可以选择以下任一方式将插件挂载到 `dsh`：
 
-export default {
-  plugins: [GarminPlugin]
-}
+- **方式 A：永久安装进 Profile（推荐）**  
+  在 `dsh-plugin-garmin` 目录下直接执行：
+  ```bash
+  # 将当前本地目录添加到 dsh 的 web profile
+  dsh plugin --profile web add .
+
+  # 或者在任意路径下指定绝对路径
+  dsh plugin --profile web add /path/to/dsh-plugin-garmin
+  ```
+  *(注：如果习惯使用命令行 Headless 模式，把 `--profile web` 改为 `--profile headless` 即可)*
+
+- **方式 B：免安装一次性启动（适合临时测试）**  
+  无需修改 profile 配置，启动时直接用 `--patch` 参数传入本项目的补丁文件：
+  ```bash
+  dsh web --patch /path/to/dsh-plugin-garmin/cordis.patch.yml
+  ```
+
+---
+
+### 2. 验证插件是否生效
+
+安装完成后，怎么确认 `dsh` 真的成功加载了本插件？有以下两种最直观的检验方式：
+
+#### 验证方式 1：终端一行命令快速测试（最推荐，耗时 5 秒）
+
+直接使用 `dsh` 的 headless 模式调用一次硬件规格查询工具：
+
+```bash
+dsh --profile headless "调用 garmin_specs 工具查询 Fenix 7 的硬件规格"
 ```
 
-### 2. Linux 宿主系统环境准备 (用于生成真机 .prg 固件)
+- **成功标志**：终端看到 Agent 成功调用了 `garmin_specs`，并输出了屏幕尺寸（260×260）、128KB 内存限制和 64 色 MIP 调色板信息。
+- **失败标志**：Agent 表示“没有找到相关工具”或“无法处理 Garmin 规格”，说明插件未成功挂载。
+
+#### 验证方式 2：在 Web 界面中对话验证
+
+启动 Web 界面：
+```bash
+dsh web
+```
+浏览器打开 `http://127.0.0.1:3080`，在对话框中问 Agent：
+> *“你现在可以使用哪些 Garmin 相关的工具？”*
+
+如果 Agent 列出了 `garmin_specs`、`garmin_preview`、`garmin_scaffold`、`garmin_build` 等工具，即代表插件已经完全加载就绪！
+
+> **提示（未配置 API Key 时如何验证防崩？）**：  
+> 如果当前尚未配置 `DEEPSEEK_API_KEY`，完全不需要发起大模型对话，可直接运行以下离线指令验证基础集成**绝无崩溃（Zero Crash）**：
+> ```bash
+> # 1. 验证配置树合并（纯离线，检查输出中是否包含 garmin）
+> dsh --profile web --patch ./cordis.patch.yml --dump-config | grep garmin
+> 
+> # 2. 验证 Web 服务与浏览器插件打包（无报错且成功输出端口即通过）
+> dsh web --patch ./cordis.patch.yml --no-open
+> ```
+
+---
+
+### 3. 运行与自然语言交互查询
+
+插件生效后，可通过 **Web UI 交互** 或 **Headless 命令行任务** 两种方式与 Agent 协同生成表盘。
+
+#### 模式 1：Web UI 对话交互（推荐，支持可视化预览与工作台）
+
+启动 DeepSeek Harness Web 服务：
+
+```bash
+dsh web
+# 或通过 npx 启动（默认监听 http://127.0.0.1:3080）
+npx @deepseek-ai/dsh web --no-open
+```
+
+在浏览器中打开 `http://127.0.0.1:3080`，即可直接在对话输入框中以**自然语言**进行查询与指令生成：
+
+- **硬件约束查询**：
+  > “查询一下 Garmin Fenix 7 的屏幕尺寸、内存预算上限和 MIP 64 色调色板限制。”
+- **表盘设计与 SVG 实时渲染**：
+  > “帮我设计一款极简战术风表盘，带橙色指针、心率弧环与电量百分比，渲染预览图并检查色彩合规性。”
+- **工程脚手架生成**：
+  > “把刚才设计的表盘生成生产级 Connect IQ 源码工程，放在 `./output/tactical-wf` 目录。”
+- **一键环境诊断与 .prg 固件编译**：
+  > “检查当前编译环境，并将 `./output/tactical-wf` 编译打包为真机安装的 .prg 二进制文件。”
+
+Web UI 会实时呈现 260×260 SVG 矢量渲染图、内存开销估算以及 MIP 调色板合规建议。
+
+#### 模式 2：Headless 命令行单次任务模式（适合脚本与自动化）
+
+对于 CI 批处理或习惯在终端运行的用户，可通过 `dsh --profile headless "<任务>"` 进行单次任务执行：
+
+```bash
+# 查询与检查环境
+dsh --profile headless "检查当前系统是否已安装 Garmin Connect IQ SDK、Java 运行环境与开发者私钥"
+
+# 一键端到端生成表盘工程
+dsh --profile headless "为 Garmin Fenix 7 设计一款高对比度运动表盘，并在 ./fenix7-runner 生成完整 Monkey C 源码工程"
+```
+
+---
+
+### 4. Linux 宿主系统环境准备 (用于生成真机 .prg 固件)
 
 如果需要直接在 Linux 环境中完成 `.prg` 编译打包，建议预装以下环境：
 
 ```bash
-# 1. 安装 Java 运行时环境 (Connect IQ 编译器底层需要 Java 8+)
+# 1. 安装 Java 运行时环境与 OpenSSL (Connect IQ 编译器底层需要 Java 8+，密钥签发需要 OpenSSL)
 sudo apt-get update
 sudo apt-get install -y default-jre-headless openssl
 
 # 2. (可选) 下载 Garmin Connect IQ SDK (Linux 版)
 # 插件会自动扫描系统 PATH 以及 ~/.Garmin/ConnectIQ/Sdks/ 目录
+# 也可以让 Agent 调用 garmin_env 工具自动诊断与引导配置
 ```
 
-> **提示**：如果未安装 `monkeyc`，插件仍然可以完整支持**表盘设计、SVG 实时预览与 Monkey C 源码脚手架生成**，用户可将生成的源码工程直接用 VS Code Garmin 插件编译。
+> **提示**：如果宿主环境尚未安装 `monkeyc`，插件仍然完整支持**表盘规格查询、规范设计、SVG 实时模拟仿真与 Monkey C 源码工程脚手架生成**，用户可将生成的工程直接用 VS Code Garmin Connect IQ 插件编译。
 
 ---
 
 ## 🛠️ 注册的 Agent 工具列表
 
-插件向 dsh 上下文注入了专属的 System Prompt 规范，并注册了 4 个核心 Agent 工具：
+插件向 dsh 上下文注入了专属的 System Prompt 规范，并注册了 5 个核心 Agent 工具：
 
 | 工具名称 | 描述 | 核心输入参数 |
 | :--- | :--- | :--- |

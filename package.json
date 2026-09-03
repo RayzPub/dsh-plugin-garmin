@@ -13,16 +13,18 @@
       "default": "./dist/src/index.js"
     },
     "./client": {
-      "types": "./dist/src/client/index.d.ts",
-      "import": "./dist/src/client/index.js",
-      "default": "./dist/src/client/index.js"
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc && node -e \"import('node:fs').then(fs => { fs.writeFileSync('dist/index.js', 'export * from \\\"./src/index.js\\\";\\nexport { apply as default } from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/index.d.ts', 'export * from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/client.js', 'export * from \\\"./src/client/index.js\\\";\\nexport { apply as default } from \\\"./src/client/index.js\\\";\\n'); fs.writeFileSync('dist/client.d.ts', 'export * from \\\"./src/client/index.js\\\";\\n'); })\"",
+    "build:node": "tsc && node -e \"import('node:fs').then(fs => { fs.writeFileSync('dist/index.js', 'export * from \\\"./src/index.js\\\";\\nexport { apply as default } from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/index.d.ts', 'export * from \\\"./src/index.js\\\";\\n'); fs.writeFileSync('dist/client.d.ts', 'export * from \\\"./src/client/index.js\\\";\\n'); })\"",
+    "build:client": "node scripts/build-client.mjs",
+    "build": "npm run build:node && npm run build:client",
     "prepare": "npm run build",
     "test": "npm run build && node --test dist/test/*.js",
+    "test:integration": "npm run build && node scripts/test-dsh-integration.mjs",
     "prepublishOnly": "npm test"
   },
   "files": [
@@ -78,6 +80,7 @@
   "devDependencies": {
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
+    "esbuild": "^0.28.2",
     "react": "^19.2.8",
     "typescript": "^5.8.0"
   }
