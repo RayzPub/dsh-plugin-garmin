@@ -204,7 +204,17 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
       }
     }
 
-    apply(mockCtx)
+    const injectedServices = new Set(['tools', 'systemPrompt'])
+    const strictCordisCtx = new Proxy(mockCtx, {
+      get(target: any, prop: string | symbol) {
+        if (typeof prop === 'string' && !injectedServices.has(prop) && !(prop in target)) {
+          throw new Error(`cannot get property "${prop}" without inject`)
+        }
+        return target[prop]
+      }
+    })
+
+    apply(strictCordisCtx)
 
     // 1. Check System Prompt Section registration (Defect 1)
     assert.strictEqual(registeredSections.length, 1, 'System prompt section must be registered via ctx.systemPrompt.section')

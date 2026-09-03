@@ -65,9 +65,6 @@ function fallbackDefineTool(options: any): any {
  * Uses @deepseek-ai/dsh-tools defineTool when available, otherwise compiles using fallback.
  */
 export function defineTool(options: any, ctx?: any): any {
-  if (typeof ctx?.defineTool === 'function') {
-    return ctx.defineTool(options)
-  }
   if (typeof ctx?.tools?.defineTool === 'function') {
     return ctx.tools.defineTool(options)
   }
