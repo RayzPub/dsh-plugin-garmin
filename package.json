@@ -7,16 +7,26 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node --test dist/test/*.js"
+    "test": "tsc && node --test dist/test/*.js",
+    "prepublishOnly": "npm test"
   },
+  "files": [
+    "dist",
+    "src/web",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "dsh-plugin",
+    "deepseek-harness",
     "garmin",
     "connect-iq",
     "monkey-c",
     "fenix7",
-    "watchface"
+    "watchface",
+    "generator"
   ],
+  "author": "DeepSeek Harness Community",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^26.2.0",
