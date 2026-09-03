@@ -8,6 +8,7 @@ import { scaffoldGarminProject } from './tools/garmin-scaffold.js'
 import { generateGarminPreview } from './tools/garmin-preview.js'
 import { buildGarminProject } from './tools/garmin-build.js'
 import { ensureDeveloperKey } from './tools/garmin-key.js'
+import { checkGarminEnvironment, setupGarminEnvironment } from './tools/garmin-env.js'
 import { GARMIN_MIP_64_PALETTE } from './preview/mip-palette.js'
 import { WatchFaceSpec } from './preview/watchface-model.js'
 
@@ -128,6 +129,31 @@ export function apply(ctx: any) {
         return buildGarminProject(args)
       }
     })
+
+    // garmin_env
+    ctx.tools.register({
+      name: 'garmin_env',
+      description: 'Check or initialize the Linux Garmin Connect IQ build environment (Java, SDK, Developer Key).',
+      parameters: {
+        action: { type: 'string', description: '"check" | "setup"', required: true },
+        sdkPath: { type: 'string', description: 'Optional custom Connect IQ SDK path' }
+      },
+      output: {
+        schema: { type: 'object' },
+        render: (_args: any, value: any) => [
+          {
+            type: 'text',
+            text: value.summary || (value.success ? 'Garmin 环境初始化步骤执行完成' : `初始化失败: ${value.error}`)
+          }
+        ]
+      },
+      async execute(args: { action: 'check' | 'setup'; sdkPath?: string }) {
+        if (args.action === 'setup') {
+          return setupGarminEnvironment({ customSdkPath: args.sdkPath })
+        }
+        return checkGarminEnvironment(args.sdkPath)
+      }
+    })
   }
 }
 
@@ -139,3 +165,4 @@ export * from './tools/garmin-preview.js'
 export * from './tools/garmin-scaffold.js'
 export * from './tools/garmin-build.js'
 export * from './tools/garmin-key.js'
+export * from './tools/garmin-env.js'

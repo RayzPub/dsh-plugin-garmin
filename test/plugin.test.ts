@@ -102,4 +102,18 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
 
     await fs.rm(tmpDir, { recursive: true, force: true })
   })
+
+  it('5. should check Garmin environment status accurately', async () => {
+    const { checkGarminEnvironment } = await import('../src/tools/garmin-env.js')
+    const status = await checkGarminEnvironment()
+    assert.ok(typeof status.ready === 'boolean')
+    assert.ok(Array.isArray(status.actionItems))
+  })
+
+  it('6. should run setupGarminEnvironment to ensure key and dirs', async () => {
+    const { setupGarminEnvironment } = await import('../src/tools/garmin-env.js')
+    const res = await setupGarminEnvironment()
+    assert.strictEqual(res.success, true)
+    assert.ok(res.stepsCompleted.length >= 2)
+  })
 })
