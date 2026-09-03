@@ -203,19 +203,20 @@ export function apply(ctx: any) {
               ]
             },
             presentationMeta: (args: any, value: any) => {
-              const svg =
+              const hasValidSvg =
                 typeof value?.svg === 'string' && value.svg.length <= MAX_PRESENTATION_SVG_BYTES
-                  ? value.svg
-                  : undefined
-              return {
-                svg,
-                metrics: value?.metrics,
-                spec: value?.normalizedSpec || args?.spec,
-                templateUsed: value?.templateUsed,
-                outputPath: value?.outputPath,
-                diagnosticInfo: value?.diagnosticInfo,
+              const meta: Record<string, any> = {
+                ...(hasValidSvg ? { svg: value.svg } : {}),
+                metrics: value?.metrics || {},
+                spec: value?.normalizedSpec || args?.spec || {},
+                templateUsed: value?.templateUsed || 'custom',
+                diagnosticInfo: value?.diagnosticInfo || { warnings: [], errors: [], autoRepaired: false },
                 availableTemplates: ['tactical', 'sport', 'pilot', 'minimal', 'hybrid']
               }
+              if (value?.outputPath) {
+                meta.outputPath = value.outputPath
+              }
+              return JSON.parse(JSON.stringify(meta))
             }
           },
           async execute(

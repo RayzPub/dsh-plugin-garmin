@@ -98,10 +98,10 @@ export function generateGarminPreview(
 
   const resolvedTemplate = templateName || (fallbackTemplateUsed ? 'tactical' : (normalizedSpec.theme || 'custom'))
 
-  return {
+  const res: PreviewResult = {
     success: errors.length === 0,
     svg,
-    outputPath: outputPath ? path.resolve(outputPath) : undefined,
+    ...(outputPath ? { outputPath: path.resolve(outputPath) } : {}),
     templateUsed: resolvedTemplate,
     normalizedSpec,
     metrics: {
@@ -117,4 +117,6 @@ export function generateGarminPreview(
       autoRepaired: wasNormalized || fallbackTemplateUsed
     }
   }
+
+  return JSON.parse(JSON.stringify(res))
 }

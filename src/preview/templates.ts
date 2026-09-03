@@ -481,11 +481,11 @@ export function normalizeWatchFaceSpec(
     theme,
     targetDevice: 'fenix7',
     backgroundColor,
-    dial,
     clockType,
-    digitalClock,
-    analogHands,
-    complications
+    complications,
+    ...(dial !== undefined ? { dial } : {}),
+    ...(digitalClock !== undefined ? { digitalClock } : {}),
+    ...(analogHands !== undefined ? { analogHands } : {})
   }
 
   return {

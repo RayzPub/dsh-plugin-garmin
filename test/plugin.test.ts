@@ -626,5 +626,68 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
 
     await fs.rm(tmpDir, { recursive: true, force: true })
   })
+
+  it('23. garmin_preview outputs and presentationMeta must be lossless JSON (no undefined properties)', async () => {
+    function findNonLossless(val: any, path = 'root', found: string[] = []): string[] {
+      if (val === undefined) {
+        found.push('UNDEFINED AT: ' + path)
+      }
+      if (typeof val === 'number' && (!Number.isFinite(val) || Object.is(val, -0))) {
+        found.push('BAD NUMBER AT: ' + path + ' = ' + val)
+      }
+      if (val && typeof val === 'object') {
+        if (Array.isArray(val)) {
+          val.forEach((item, idx) => findNonLossless(item, path + '[' + idx + ']', found))
+        } else {
+          for (const [k, v] of Object.entries(val)) {
+            findNonLossless(v, path + '.' + k, found)
+          }
+        }
+      }
+      return found
+    }
+
+    const { generateGarminPreview } = await import('../src/tools/garmin-preview.js')
+    const { apply } = await import('../src/index.js')
+
+    // Test with user's exact minimal template invocation without outputPath
+    const userInput = {
+      template: 'minimal',
+      simulationState: {
+        battery: 78,
+        heartRate: 72,
+        hours: 10,
+        minutes: 8,
+        steps: 8532
+      }
+    }
+
+    const previewResult = generateGarminPreview(undefined, userInput.simulationState, undefined, userInput.template)
+    const previewIssues = findNonLossless(previewResult, 'previewResult')
+    assert.deepStrictEqual(previewIssues, [], 'generateGarminPreview output must not have undefined properties')
+
+    // Test Cordis tool execution and presentationMeta
+    const registeredTools: any[] = []
+    const fakeCtx = {
+      tools: {
+        register: (tool: any) => registeredTools.push(tool)
+      },
+      systemPrompt: {
+        section: () => {}
+      }
+    }
+    apply(fakeCtx)
+
+    const tool = registeredTools.find(t => t.name === 'garmin_preview')
+    assert.ok(tool, 'garmin_preview tool must be registered')
+
+    const execRes = await tool.execute(userInput)
+    const execIssues = findNonLossless(execRes, 'execRes')
+    assert.deepStrictEqual(execIssues, [], 'tool.execute must return lossless JSON')
+
+    const metaRes = tool.output.presentationMeta(userInput, execRes)
+    const metaIssues = findNonLossless(metaRes, 'metaRes')
+    assert.deepStrictEqual(metaIssues, [], 'tool.output.presentationMeta must return lossless JSON')
+  })
 })
 
