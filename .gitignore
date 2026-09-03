@@ -20,3 +20,6 @@ lerna-debug.log*
 .vscode/
 *.tmp
 *.swp
+
+# Agent workspace data
+.agents/

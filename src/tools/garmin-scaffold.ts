@@ -1,11 +1,14 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { WatchFaceSpec } from '../preview/watchface-model.js'
+import { generateMonkeyCView } from '../preview/code-generator.js'
 
 export interface ScaffoldOptions {
   projectDir: string
   appName: string
-  clockType: 'analog' | 'digital' | 'hybrid'
-  theme: string
+  clockType?: 'analog' | 'digital' | 'hybrid'
+  theme?: string
+  spec?: WatchFaceSpec
 }
 
 export async function scaffoldGarminProject(options: ScaffoldOptions): Promise<{ success: boolean; filesCreated: string[] }> {
@@ -82,88 +85,53 @@ function getApp() as GarminWatchFaceApp {
   await fs.writeFile(path.join(root, 'source', 'App.mc'), appMc)
   filesCreated.push('source/App.mc')
 
-  // 5. source/View.mc
-  const viewMc = `import Toybox.Graphics;
-import Toybox.Lang;
-import Toybox.System;
-import Toybox.WatchUi;
-import Toybox.ActivityMonitor;
-import Toybox.Time;
-import Toybox.Time.Gregorian;
-
-class GarminWatchFaceView extends WatchUi.WatchFace {
-
-    private var _isSleep as Boolean = false;
-    private var _screenCenter as Number = 130;
-
-    function initialize() {
-        WatchFace.initialize();
+  // 5. source/View.mc (generate dynamically if spec is provided, or build default spec)
+  let viewMc: string
+  if (options.spec) {
+    viewMc = generateMonkeyCView(options.spec)
+  } else {
+    const defaultSpec: WatchFaceSpec = {
+      name: options.appName,
+      theme: (options.theme as any) || 'sport',
+      targetDevice: 'fenix7',
+      backgroundColor: '#000000',
+      dial: {
+        showTicks: true,
+        tickColor: '#555555',
+        subTicks: false,
+        showNumbers: false,
+        numberColor: '#AAAAAA',
+        radius: 120
+      },
+      clockType: options.clockType || 'digital',
+      digitalClock: {
+        x: 130,
+        y: 105,
+        font: 'NUMBER_HOT',
+        color: '#FFFFFF',
+        showSeconds: true,
+        showAmPm: false
+      },
+      analogHands: options.clockType === 'analog' || options.clockType === 'hybrid' ? {
+        hourColor: '#FFFFFF',
+        minuteColor: '#00AAFF',
+        secondColor: '#FF0000',
+        hourLength: 55,
+        minuteLength: 85,
+        secondLength: 100,
+        hourWidth: 4,
+        minuteWidth: 3,
+        secondWidth: 1,
+        accentTail: true
+      } : undefined,
+      complications: [
+        { id: 'bat', type: 'battery', position: { x: 130, y: 155 }, style: 'bar_progress', color: '#AAAAAA' },
+        { id: 'step', type: 'steps', position: { x: 130, y: 180 }, style: 'arc_progress', color: '#00AAFF' }
+      ]
     }
+    viewMc = generateMonkeyCView(defaultSpec)
+  }
 
-    function onLayout(dc as Graphics.Dc) as Void {
-        _screenCenter = dc.getWidth() / 2;
-    }
-
-    function onShow() as Void {
-    }
-
-    function onUpdate(dc as Graphics.Dc) as Void {
-        // 1. Clear background
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-        var cx = _screenCenter;
-        var cy = _screenCenter;
-
-        // 2. Draw Dial Ticks
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        for (var i = 0; i < 60; i += 5) {
-            var angleRad = (i * 6 * Math.PI) / 180.0;
-            var r1 = 112;
-            var r2 = 120;
-            var x1 = cx + r1 * Math.sin(angleRad);
-            var y1 = cy - r1 * Math.cos(angleRad);
-            var x2 = cx + r2 * Math.sin(angleRad);
-            var y2 = cy - r2 * Math.cos(angleRad);
-            dc.drawLine(x1, y1, x2, y2);
-        }
-
-        // 3. Time
-        var clockTime = System.getClockTime();
-        var timeStr = Lang.format("$1$:$2$", [clockTime.hour.format("%02d"), clockTime.min.format("%02d")]);
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 25, Graphics.FONT_NUMBER_HOT, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        // 4. Battery & Heart Rate / Steps
-        var stats = System.getSystemStats();
-        var batPercent = stats.battery != null ? stats.battery.toNumber() : 100;
-        var batColor = batPercent <= 20 ? Graphics.COLOR_RED : Graphics.COLOR_LT_GRAY;
-        dc.setColor(batColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 30, Graphics.FONT_TINY, batPercent.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER);
-
-        var info = ActivityMonitor.getInfo();
-        var steps = (info != null && info.steps != null) ? info.steps : 0;
-        dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 50, Graphics.FONT_XTINY, "STEPS: " + steps.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function onHide() as Void {
-    }
-
-    function onExitSleep() as Void {
-        _isSleep = false;
-        WatchUi.requestUpdate();
-    }
-
-    function onEnterSleep() as Void {
-        _isSleep = true;
-        WatchUi.requestUpdate();
-    }
-}
-`
   await fs.writeFile(path.join(root, 'source', 'View.mc'), viewMc)
   filesCreated.push('source/View.mc')
 

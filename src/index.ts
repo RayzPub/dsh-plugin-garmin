@@ -1,11 +1,13 @@
 /**
  * @module dsh-plugin-garmin
- * Garmin Watch Face Studio & Generator plugin for DeepSeek Harness
+ * Garmin Watch Face Studio & Generator plugin for DeepSeek Harness (dsh)
  */
 
 import { GARMIN_FENIX7_SYSTEM_PROMPT } from './prompts/fenix7-prompt.js'
 import { scaffoldGarminProject } from './tools/garmin-scaffold.js'
 import { generateGarminPreview } from './tools/garmin-preview.js'
+import { buildGarminProject } from './tools/garmin-build.js'
+import { ensureDeveloperKey } from './tools/garmin-key.js'
 import { GARMIN_MIP_64_PALETTE } from './preview/mip-palette.js'
 import { WatchFaceSpec } from './preview/watchface-model.js'
 
@@ -22,8 +24,9 @@ export function apply(ctx: any) {
     })
   }
 
-  // 2. Register garmin_specs tool
+  // 2. Register tools
   if (ctx.tools?.register) {
+    // garmin_specs
     ctx.tools.register({
       name: 'garmin_specs',
       description: 'Get hardware specifications, screen constraints, and 64-color MIP palette for Garmin Fenix 7.',
@@ -54,7 +57,7 @@ export function apply(ctx: any) {
       }
     })
 
-    // 3. Register garmin_preview tool
+    // garmin_preview
     ctx.tools.register({
       name: 'garmin_preview',
       description: 'Render and validate a declarative Garmin Fenix 7 watch face specification in 260x260 SVG and check memory/MIP color budget.',
@@ -73,14 +76,15 @@ export function apply(ctx: any) {
       }
     })
 
-    // 4. Register garmin_scaffold tool
+    // garmin_scaffold
     ctx.tools.register({
       name: 'garmin_scaffold',
-      description: 'Generate a complete, ready-to-compile Garmin Fenix 7 Connect IQ watch face project.',
+      description: 'Generate a complete, ready-to-compile Garmin Fenix 7 Connect IQ watch face project with dynamic Monkey C code.',
       parameters: {
         projectDir: { type: 'string', required: true, description: 'Target directory for the project' },
         appName: { type: 'string', required: true, description: 'Display name of the watch face' },
-        clockType: { type: 'string', description: '"analog" | "digital" | "hybrid"' }
+        clockType: { type: 'string', description: '"analog" | "digital" | "hybrid"' },
+        spec: { type: 'object', description: 'Optional full WatchFaceSpec to generate customized View.mc' }
       },
       output: {
         schema: { type: 'object' },
@@ -93,8 +97,35 @@ export function apply(ctx: any) {
           projectDir: args.projectDir,
           appName: args.appName,
           clockType: args.clockType || 'digital',
-          theme: 'sport'
+          theme: args.spec?.theme || 'sport',
+          spec: args.spec
         })
+      }
+    })
+
+    // garmin_build
+    ctx.tools.register({
+      name: 'garmin_build',
+      description: 'Compile a Garmin Connect IQ watch face project into an installable binary (.prg) on Linux.',
+      parameters: {
+        projectDir: { type: 'string', required: true, description: 'Root directory of the Garmin project containing monkey.jungle' },
+        device: { type: 'string', description: 'Target device ID (default: "fenix7")' },
+        outputPrg: { type: 'string', description: 'Optional explicit output path for .prg' },
+        sdkPath: { type: 'string', description: 'Optional custom Connect IQ SDK root path' }
+      },
+      output: {
+        schema: { type: 'object' },
+        render: (_args: any, value: any) => [
+          {
+            type: 'text',
+            text: value.success
+              ? `Garmin build SUCCEEDED: ${value.prgPath}`
+              : `Garmin build FAILED:\n${value.diagnostics?.join('\n') || value.error}`
+          }
+        ]
+      },
+      async execute(args: any) {
+        return buildGarminProject(args)
       }
     })
   }
@@ -103,5 +134,8 @@ export function apply(ctx: any) {
 export * from './preview/mip-palette.js'
 export * from './preview/watchface-model.js'
 export * from './preview/dc-emulator.js'
+export * from './preview/code-generator.js'
 export * from './tools/garmin-preview.js'
 export * from './tools/garmin-scaffold.js'
+export * from './tools/garmin-build.js'
+export * from './tools/garmin-key.js'
