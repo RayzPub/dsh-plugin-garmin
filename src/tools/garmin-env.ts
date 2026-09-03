@@ -1,4 +1,4 @@
-import { exec } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
@@ -6,7 +6,7 @@ import * as os from 'node:os'
 import { locateMonkeyC } from './garmin-build.js'
 import { ensureDeveloperKey } from './garmin-key.js'
 
-const execAsync = promisify(exec)
+const execFileAsync = promisify(execFile)
 
 export interface EnvironmentStatus {
   ready: boolean
@@ -38,7 +38,7 @@ export async function checkGarminEnvironment(customSdkPath?: string): Promise<En
 
   // 1. Check Java
   try {
-    const { stderr, stdout } = await execAsync('java -version')
+    const { stderr, stdout } = await execFileAsync('java', ['-version'])
     javaInstalled = true
     const versionMatch = (stderr || stdout).match(/version "([^"]+)"|openjdk (\S+)/i)
     javaVersion = versionMatch ? (versionMatch[1] || versionMatch[2]) : 'installed'
@@ -125,7 +125,7 @@ export async function setupGarminEnvironment(options?: { customSdkPath?: string 
 
     // Step 3: Check Java runtime
     try {
-      await execAsync('java -version')
+      await execFileAsync('java', ['-version'])
       stepsCompleted.push('Java 运行时环境检测通过')
       logs.push('Java JRE 已就绪。')
     } catch {

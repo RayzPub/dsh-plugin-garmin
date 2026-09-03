@@ -1,10 +1,10 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as os from 'node:os'
-import { exec } from 'node:child_process'
+import * as crypto from 'node:crypto'
 import { promisify } from 'node:util'
 
-const execAsync = promisify(exec)
+const generateKeyPairAsync = promisify(crypto.generateKeyPair)
 
 export interface KeyInfo {
   keyPath: string
@@ -12,13 +12,13 @@ export interface KeyInfo {
 }
 
 /**
- * Ensures a valid Garmin Connect IQ developer_key.der exists on Linux.
+ * Ensures a valid Garmin Connect IQ developer_key.der exists on Linux/macOS.
  * Default location: ~/.Garmin/ConnectIQ/developer_key.der
+ * Generated in-process using node:crypto without openssl child process or shell execution.
  */
 export async function ensureDeveloperKey(customKeyDir?: string): Promise<KeyInfo> {
   const targetDir = customKeyDir || path.join(os.homedir(), '.Garmin', 'ConnectIQ')
   const keyPath = path.join(targetDir, 'developer_key.der')
-  const pemPath = path.join(targetDir, 'developer_key.pem')
 
   // Check if .der key already exists
   try {
@@ -30,14 +30,14 @@ export async function ensureDeveloperKey(customKeyDir?: string): Promise<KeyInfo
 
   await fs.mkdir(targetDir, { recursive: true })
 
-  // Try generating with openssl CLI
+  // Generate RSA-4096 key in-process using node:crypto
   try {
-    // 1. Generate RSA 4096 PEM private key
-    await execAsync(`openssl genrsa -out "${pemPath}" 4096`)
-    // 2. Convert to unencrypted PKCS#8 DER format required by monkeyc
-    await execAsync(`openssl pkcs8 -topk8 -inform PEM -outform DER -in "${pemPath}" -out "${keyPath}" -nocrypt`)
-    // Clean up temporary PEM file for security
-    await fs.unlink(pemPath).catch(() => {})
+    const { privateKey } = await generateKeyPairAsync('rsa', {
+      modulusLength: 4096,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'der' }
+    })
+    await fs.writeFile(keyPath, privateKey, { mode: 0o600 })
     return { keyPath, isGenerated: true }
   } catch (err: any) {
     throw new Error(`Failed to generate Garmin developer key: ${err.message || err}`)

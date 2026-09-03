@@ -6,7 +6,8 @@ import * as os from 'node:os'
 import { generateGarminPreview } from '../src/tools/garmin-preview.js'
 import { scaffoldGarminProject } from '../src/tools/garmin-scaffold.js'
 import { ensureDeveloperKey } from '../src/tools/garmin-key.js'
-import { buildGarminProject } from '../src/tools/garmin-build.js'
+import { buildGarminProject, quoteSh, buildMonkeycCommand, ALLOWED_GARMIN_DEVICES } from '../src/tools/garmin-build.js'
+import { apply } from '../src/index.js'
 import { WatchFaceSpec } from '../src/preview/watchface-model.js'
 
 describe('dsh-plugin-garmin End-to-End Tests', () => {
@@ -78,13 +79,19 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
     await fs.rm(tmpDir, { recursive: true, force: true })
   })
 
-  it('3. should generate valid developer_key.der using openssl on Linux', async () => {
+  it('3. should generate valid developer_key.der using node:crypto without openssl CLI', async () => {
     const keyDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-key-test-'))
     const keyInfo = await ensureDeveloperKey(keyDir)
 
     assert.ok(keyInfo.keyPath.endsWith('developer_key.der'))
     const stats = await fs.stat(keyInfo.keyPath)
-    assert.ok(stats.size > 1000)
+    // 4096-bit RSA PKCS#8 DER key is > 2000 bytes
+    assert.ok(stats.size > 2000)
+
+    // Re-check existing key reuse
+    const secondCheck = await ensureDeveloperKey(keyDir)
+    assert.strictEqual(secondCheck.isGenerated, false)
+    assert.strictEqual(secondCheck.keyPath, keyInfo.keyPath)
 
     await fs.rm(keyDir, { recursive: true, force: true })
   })
@@ -96,7 +103,6 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
       device: 'fenix7'
     })
 
-    // Environment currently has openssl but no monkeyc / java installed
     assert.strictEqual(buildRes.success, false)
     assert.ok(buildRes.diagnostics.length > 0)
 
@@ -115,5 +121,188 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
     const res = await setupGarminEnvironment()
     assert.strictEqual(res.success, true)
     assert.ok(res.stepsCompleted.length >= 2)
+  })
+
+  it('7. quoteSh should safely escape strings for POSIX sh/bash', () => {
+    // Normal string
+    assert.strictEqual(quoteSh('hello'), "'hello'")
+    // Empty string
+    assert.strictEqual(quoteSh(''), "''")
+    // Embedded single quote
+    assert.strictEqual(quoteSh("foo'bar"), "'foo'\\''bar'")
+    // Whitespace
+    assert.strictEqual(quoteSh('a b c'), "'a b c'")
+    // Subshell and expansion attempts
+    assert.strictEqual(quoteSh('$(touch /tmp/pwned)'), "'$(touch /tmp/pwned)'")
+    assert.strictEqual(quoteSh('fenix7; rm -rf /'), "'fenix7; rm -rf /'")
+
+    // Test buildMonkeycCommand
+    const cmd = buildMonkeycCommand({
+      monkeycPath: '/sdk/bin/monkeyc',
+      jungleFile: '/project/monkey.jungle',
+      outputPrg: '/project/bin/fenix7.prg',
+      device: 'fenix7',
+      keyPath: '/key/developer_key.der'
+    })
+    assert.ok(cmd.includes("'/sdk/bin/monkeyc'"))
+    assert.ok(cmd.includes("'/project/bin/fenix7.prg'"))
+    assert.ok(cmd.includes(" -d 'fenix7'"))
+  })
+
+  it('8. should reject command injection attempts in device and outputPrg', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-inject-test-'))
+    const pwnedFile = path.join(os.tmpdir(), 'garmin_test_pwned_' + Date.now())
+
+    try {
+      await fs.rm(pwnedFile, { force: true })
+    } catch {}
+
+    // Malicious device parameter with shell metacharacters
+    const buildRes = await buildGarminProject({
+      projectDir: tmpDir,
+      device: `fenix7; touch ${pwnedFile}`,
+      outputPrg: `${tmpDir}/$(touch ${pwnedFile}).prg`
+    })
+
+    assert.strictEqual(buildRes.success, false)
+    assert.ok(buildRes.error?.includes('Invalid or untrusted device ID'))
+
+    // Verify /tmp/pwned file was NOT created
+    let pwnedExists = false
+    try {
+      await fs.access(pwnedFile)
+      pwnedExists = true
+    } catch {}
+    assert.strictEqual(pwnedExists, false, 'Command injection must not create canary file')
+
+    await fs.rm(tmpDir, { recursive: true, force: true })
+  })
+
+  it('9. should integrate cleanly with Cordis context and satisfy DeepSeek Harness requirements', () => {
+    const registeredSections: Array<{ name: string; order: number; text: string }> = []
+    const registeredTools: any[] = []
+
+    const mockCtx = {
+      systemPrompt: {
+        section(sec: { name: string; order: number; text: string }) {
+          registeredSections.push(sec)
+          return () => {}
+        }
+      },
+      tools: {
+        register(toolDef: any) {
+          registeredTools.push(toolDef)
+          return () => {}
+        },
+        schemas() {
+          return registeredTools.map(t => ({
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters
+          }))
+        }
+      }
+    }
+
+    apply(mockCtx)
+
+    // 1. Check System Prompt Section registration (Defect 1)
+    assert.strictEqual(registeredSections.length, 1, 'System prompt section must be registered via ctx.systemPrompt.section')
+    const promptSection = registeredSections[0]
+    assert.strictEqual(promptSection.name, 'garmin:fenix7-rules')
+    assert.strictEqual(promptSection.order, 2950, 'Section order must match GARMIN_RULES (2950)')
+    assert.ok(promptSection.text.includes('Fenix 7'), 'Prompt text must contain Fenix 7 hardware constraints')
+
+    // 2. Check 5 tools registered (Defect 2)
+    const toolMap = new Map(registeredTools.map(t => [t.name, t]))
+    const expectedToolNames = ['garmin_specs', 'garmin_preview', 'garmin_scaffold', 'garmin_build', 'garmin_env']
+    for (const name of expectedToolNames) {
+      assert.ok(toolMap.has(name), `Tool ${name} must be registered`)
+    }
+
+    // 3. Verify all tool output schemas have additionalProperties: true
+    for (const [name, tool] of toolMap.entries()) {
+      assert.strictEqual(
+        tool.output.schema.type,
+        'object',
+        `Tool ${name} output schema must be type object`
+      )
+      assert.strictEqual(
+        tool.output.schema.additionalProperties,
+        true,
+        `Tool ${name} output schema must explicitly have additionalProperties: true`
+      )
+    }
+
+    // 4. Check garmin_preview parameters have additionalProperties: true and presentationMeta
+    const previewTool = toolMap.get('garmin_preview')!
+    const previewProps = previewTool.parameters.properties
+    assert.strictEqual(previewProps.spec.type, 'object')
+    assert.strictEqual(previewProps.spec.additionalProperties, true)
+    assert.strictEqual(previewProps.simulationState.type, 'object')
+    assert.strictEqual(previewProps.simulationState.additionalProperties, true)
+    assert.ok(typeof previewTool.output.presentationMeta === 'function')
+
+    // Test presentationMeta bounds SVG size
+    const metaSmall = previewTool.output.presentationMeta({}, { svg: '<svg>small</svg>', metrics: { colorPaletteValid: true } })
+    assert.strictEqual(metaSmall.svg, '<svg>small</svg>')
+    const metaTooBig = previewTool.output.presentationMeta({}, { svg: 'x'.repeat(70000), metrics: {} })
+    assert.strictEqual(metaTooBig.svg, undefined)
+
+    // 5. Check garmin_scaffold parameters have additionalProperties: true and clockType enum
+    const scaffoldTool = toolMap.get('garmin_scaffold')!
+    assert.strictEqual(scaffoldTool.parameters.properties.spec.type, 'object')
+    assert.strictEqual(scaffoldTool.parameters.properties.spec.additionalProperties, true)
+    assert.deepStrictEqual(scaffoldTool.parameters.properties.clockType.enum, ['analog', 'digital', 'hybrid'])
+
+    // 6. Check garmin_specs and garmin_build device enum
+    const specsTool = toolMap.get('garmin_specs')!
+    assert.deepStrictEqual(specsTool.parameters.properties.device.enum, [...ALLOWED_GARMIN_DEVICES])
+
+    const buildTool = toolMap.get('garmin_build')!
+    assert.deepStrictEqual(buildTool.parameters.properties.device.enum, [...ALLOWED_GARMIN_DEVICES])
+    assert.strictEqual(buildTool.timeoutMs, 120_000)
+
+    // 7. Check garmin_env action enum
+    const envTool = toolMap.get('garmin_env')!
+    assert.deepStrictEqual(envTool.parameters.properties.action.enum, ['check', 'setup'])
+
+    // 8. Check schemas() projection
+    const schemas = mockCtx.tools.schemas()
+    assert.strictEqual(schemas.length, 5)
+  })
+
+  it('10. codebase audit: should have no exec( calls in src/', async () => {
+    async function scanDir(dir: string): Promise<string[]> {
+      const files: string[] = []
+      const entries = await fs.readdir(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name)
+        if (entry.isDirectory()) {
+          files.push(...(await scanDir(fullPath)))
+        } else if (entry.name.endsWith('.ts')) {
+          files.push(fullPath)
+        }
+      }
+      return files
+    }
+
+    const srcDir = path.resolve('src')
+    const files = await scanDir(srcDir)
+    const violations: string[] = []
+
+    for (const file of files) {
+      const content = await fs.readFile(file, 'utf8')
+      const lines = content.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        // Match exec( or execAsync( but not execFile( or execFileAsync(
+        if (/\bexec\s*\(/.test(line) || /\bexecAsync\s*\(/.test(line)) {
+          violations.push(`${path.relative(srcDir, file)}:${i + 1}: ${line.trim()}`)
+        }
+      }
+    }
+
+    assert.strictEqual(violations.length, 0, `Forbidden exec() calls found:\n${violations.join('\n')}`)
   })
 })
