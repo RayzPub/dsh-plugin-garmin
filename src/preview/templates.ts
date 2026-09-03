@@ -367,14 +367,24 @@ export function normalizeWatchFaceSpec(
 
   // 7. Dial
   let dial: DialConfig | undefined = undefined
+  const topLevelShowTicks = (inputSpec as any).showTicks
   if (inputSpec.dial) {
     dial = {
-      showTicks: inputSpec.dial.showTicks ?? base.dial?.showTicks ?? true,
+      showTicks: topLevelShowTicks !== undefined ? Boolean(topLevelShowTicks) : (inputSpec.dial.showTicks ?? base.dial?.showTicks ?? true),
       tickColor: snapToClosestMipColor(inputSpec.dial.tickColor || base.dial?.tickColor, '#555555').hex,
       subTicks: inputSpec.dial.subTicks ?? base.dial?.subTicks ?? true,
       showNumbers: inputSpec.dial.showNumbers ?? base.dial?.showNumbers ?? true,
       numberColor: snapToClosestMipColor(inputSpec.dial.numberColor || base.dial?.numberColor, '#FFAA00').hex,
       radius: typeof inputSpec.dial.radius === 'number' && !isNaN(inputSpec.dial.radius) ? inputSpec.dial.radius : (base.dial?.radius || 120)
+    }
+  } else if (topLevelShowTicks !== undefined) {
+    dial = {
+      showTicks: Boolean(topLevelShowTicks),
+      tickColor: snapToClosestMipColor(base.dial?.tickColor, '#555555').hex,
+      subTicks: base.dial?.subTicks ?? true,
+      showNumbers: base.dial?.showNumbers ?? true,
+      numberColor: snapToClosestMipColor(base.dial?.numberColor, '#FFAA00').hex,
+      radius: base.dial?.radius || 120
     }
   } else if (inputSpec.dial === undefined && (templateName || !inputSpec.clockType)) {
     dial = base.dial ? JSON.parse(JSON.stringify(base.dial)) : undefined
@@ -392,9 +402,14 @@ export function normalizeWatchFaceSpec(
       showAmPm: false
     }
     const inputDc = inputSpec.digitalClock
+    const rawX = (inputDc as any)?.position?.x ?? inputDc?.x
+    const rawY = (inputDc as any)?.position?.y ?? inputDc?.y
+    const dcX = typeof rawX === 'number' && !isNaN(rawX) ? rawX : baseDc.x
+    const dcY = typeof rawY === 'number' && !isNaN(rawY) ? rawY : baseDc.y
+
     digitalClock = {
-      x: typeof inputDc?.x === 'number' && !isNaN(inputDc.x) ? inputDc.x : baseDc.x,
-      y: typeof inputDc?.y === 'number' && !isNaN(inputDc.y) ? inputDc.y : baseDc.y,
+      x: dcX,
+      y: dcY,
       font: (['NUMBER_HOT', 'NUMBER_MILD', 'LARGE', 'MEDIUM'] as const).includes(inputDc?.font as any)
         ? (inputDc?.font as any)
         : baseDc.font,
@@ -408,7 +423,10 @@ export function normalizeWatchFaceSpec(
 
   // 9. Analog Hands
   let analogHands = base.analogHands
-  if (clockType === 'analog' || clockType === 'hybrid') {
+  const topLevelShowAnalog = (inputSpec as any).showAnalogHands
+  if (topLevelShowAnalog === false) {
+    analogHands = undefined
+  } else if (clockType === 'analog' || clockType === 'hybrid') {
     const baseHands = base.analogHands || {
       hourColor: '#FFFFFF',
       minuteColor: '#FFAA00',

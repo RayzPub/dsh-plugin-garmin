@@ -87,15 +87,17 @@ export function generateMonkeyCView(rawSpec: WatchFaceSpec): string {
                  dc.font === 'NUMBER_MILD' ? 'Graphics.FONT_NUMBER_MILD' :
                  dc.font === 'LARGE' ? 'Graphics.FONT_LARGE' : 'Graphics.FONT_MEDIUM'
 
-    drawCodeBlocks.push(`
-        // --- Digital Clock ---
-        var timeStr = Lang.format("$1$:$2$", [clockTime.hour.format("%02d"), clockTime.min.format("%02d")]);
-        dc.setColor(${dColor}, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(${dc.x}, ${dc.y}, ${font}, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        if (${dc.showSeconds} && !_isSleep) {
+    const secondsCode = dc.showSeconds ? `
+        if (!_isSleep) {
             var secStr = clockTime.sec.format("%02d");
             dc.drawText(${dc.x + 60}, ${dc.y - 10}, Graphics.FONT_XTINY, secStr, Graphics.TEXT_JUSTIFY_LEFT);
-        }`)
+        }` : ''
+
+    drawCodeBlocks.push(`
+        // --- Digital Clock ---
+        var timeStr = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
+        dc.setColor(${dColor}, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${dc.x}, ${dc.y}, ${font}, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);${secondsCode}`)
   }
 
   // 3. Complications (with deduplicated variable names per index)
@@ -166,6 +168,12 @@ export function generateMonkeyCView(rawSpec: WatchFaceSpec): string {
     drawCodeBlocks.push(handsCode.join('\n'))
   }
 
+  const combinedCode = drawCodeBlocks.join('\n')
+  const usesSleep = combinedCode.includes('_isSleep')
+  const sleepDecl = usesSleep ? '\n    private var _isSleep as Boolean = false;' : ''
+  const sleepExit = usesSleep ? '        _isSleep = false;\n' : ''
+  const sleepEnter = usesSleep ? '        _isSleep = true;\n' : ''
+
   return `import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
@@ -176,8 +184,7 @@ import Toybox.Time.Gregorian;
 import Toybox.Math;
 
 class GarminWatchFaceView extends WatchUi.WatchFace {
-
-    private var _isSleep as Boolean = false;
+${sleepDecl}
     private var _screenCenter as Number = 130;
 
     function initialize() {
@@ -201,20 +208,18 @@ class GarminWatchFaceView extends WatchUi.WatchFace {
         var clockTime = System.getClockTime();
         var sysStats = System.getSystemStats();
         var actInfo = ActivityMonitor.getInfo();
-${drawCodeBlocks.join('\n')}
+${combinedCode}
     }
 
     function onHide() as Void {
     }
 
     function onExitSleep() as Void {
-        _isSleep = false;
-        WatchUi.requestUpdate();
+${sleepExit}        WatchUi.requestUpdate();
     }
 
     function onEnterSleep() as Void {
-        _isSleep = true;
-        WatchUi.requestUpdate();
+${sleepEnter}        WatchUi.requestUpdate();
     }
 }
 `
@@ -259,7 +264,7 @@ function generateComplicationCode(comp: ComplicationItem, index: number): string
         // Complication: Date (#${index + 1})
         var now_${index} = Time.now();
         var dateInfo_${index} = Gregorian.info(now_${index}, Time.FORMAT_SHORT);
-        var dateStr_${index} = Lang.format("$1$/$2$", [dateInfo_${index}.month.format("%02d"), dateInfo_${index}.day.format("%02d")]);
+        var dateStr_${index} = dateInfo_${index}.month.format("%02d") + "/" + dateInfo_${index}.day.format("%02d");
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
         dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, dateStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 

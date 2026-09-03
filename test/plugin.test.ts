@@ -689,5 +689,60 @@ describe('dsh-plugin-garmin End-to-End Tests', () => {
     const metaIssues = findNonLossless(metaRes, 'metaRes')
     assert.deepStrictEqual(metaIssues, [], 'tool.output.presentationMeta must return lossless JSON')
   })
+
+  it('24. digitalClock must honor position.x and position.y object in preview and SVG output', () => {
+    const preview = generateGarminPreview({
+      name: 'PosTestFace',
+      clockType: 'digital',
+      digitalClock: {
+        position: { x: 130, y: 145 },
+        color: '#FFFFFF',
+        font: 'NUMBER_HOT',
+        showSeconds: false,
+        showAmPm: false
+      } as any
+    })
+    assert.strictEqual(preview.normalizedSpec.digitalClock?.x, 130)
+    assert.strictEqual(preview.normalizedSpec.digitalClock?.y, 145)
+    assert.ok(preview.svg.includes('y="145"'), 'SVG must render digital time at specified y=145')
+  })
+
+  it('25. scaffold must honor top-level showTicks: false and showAnalogHands: false flags', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-scaffold-flags-'))
+    const res = await scaffoldGarminProject({
+      projectDir: tmpDir,
+      appName: 'CleanFace',
+      template: 'tactical',
+      spec: {
+        name: 'CleanFace',
+        showTicks: false,
+        showAnalogHands: false,
+        clockType: 'digital',
+        digitalClock: { x: 130, y: 130, color: '#FFFFFF', font: 'NUMBER_HOT', showSeconds: false, showAmPm: false }
+      } as any
+    })
+
+    assert.strictEqual(res.success, true)
+    const viewMc = await fs.readFile(path.join(tmpDir, 'source', 'View.mc'), 'utf8')
+    assert.ok(!viewMc.includes('Dial Ticks'), 'View.mc must omit Dial Ticks when showTicks is false')
+    assert.ok(!viewMc.includes('Analog Hands'), 'View.mc must omit Analog Hands when showAnalogHands is false')
+    assert.ok(!viewMc.includes('_isSleep'), 'View.mc must omit unused _isSleep when seconds and hands are disabled')
+
+    await fs.rm(tmpDir, { recursive: true, force: true })
+  })
+
+  it('26. manifest permissions must adhere to minimal principle without redundant SensorHistory', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'garmin-scaffold-perm-'))
+    await scaffoldGarminProject({
+      projectDir: tmpDir,
+      appName: 'PermTest',
+      template: 'minimal'
+    })
+
+    const manifest = await fs.readFile(path.join(tmpDir, 'manifest.xml'), 'utf8')
+    assert.ok(!manifest.includes('SensorHistory'), 'Default watch face must not declare redundant SensorHistory permission')
+
+    await fs.rm(tmpDir, { recursive: true, force: true })
+  })
 })
 

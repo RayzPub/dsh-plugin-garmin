@@ -154,10 +154,12 @@ export function renderWatchFaceToSvg(
     const timeStr = `${hh}:${mm}`
     const fontSize = dc.font === 'NUMBER_HOT' ? 44 : dc.font === 'NUMBER_MILD' ? 36 : 28
 
-    elements.push(`<text x="${dc.x}" y="${dc.y}" fill="${dColor}" font-family="'Roboto Condensed', 'Helvetica Neue', sans-serif" font-size="${fontSize}" font-weight="900" letter-spacing="1" text-anchor="middle">${timeStr}</text>`)
+    const dcX = typeof (dc as any).position?.x === 'number' ? (dc as any).position.x : dc.x
+    const dcY = typeof (dc as any).position?.y === 'number' ? (dc as any).position.y : dc.y
+    elements.push(`<text x="${dcX}" y="${dcY}" fill="${dColor}" font-family="'Roboto Condensed', 'Helvetica Neue', sans-serif" font-size="${fontSize}" font-weight="900" letter-spacing="1" text-anchor="middle">${timeStr}</text>`)
 
     if (dc.showSeconds && !state.isSleepMode) {
-      elements.push(`<text x="${dc.x + 62}" y="${dc.y - 12}" fill="${dColor}" font-family="'Roboto Condensed', sans-serif" font-size="14" font-weight="bold">${ss}</text>`)
+      elements.push(`<text x="${dcX + 62}" y="${dcY - 12}" fill="${dColor}" font-family="'Roboto Condensed', sans-serif" font-size="14" font-weight="bold">${ss}</text>`)
     }
   }
 
