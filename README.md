@@ -223,7 +223,7 @@ node rsi/loop.mjs --json
 node rsi/loop.mjs --compare rsi/history/latest.json
 ```
 
-详细规范与 Agent 协作 SOP 请查阅 [docs/RSI_FRAMEWORK.md](docs/RSI_FRAMEWORK.md) 与 [AGENTS.md](AGENTS.md)。
+详细规范、实测演进报告与 Agent 协作 SOP 请查阅 [docs/RSI_FRAMEWORK.md](docs/RSI_FRAMEWORK.md)、[docs/RSI_EVOLUTION_LOG.md](docs/RSI_EVOLUTION_LOG.md) 与 [AGENTS.md](AGENTS.md)。
 
 ---
 
