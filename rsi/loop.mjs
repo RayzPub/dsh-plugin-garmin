@@ -10,12 +10,15 @@ async function main() {
   const isCompare = args.includes('--compare')
   const baselinePath = isCompare ? args[args.indexOf('--compare') + 1] : null
   const isDiagnose = args.includes('--diagnose')
+  const isJson = args.includes('--json')
 
-  console.log('\n======================================================')
-  console.log('🔄  Garmin Watch Face Generator — RSI 自演进评估系统')
-  console.log('======================================================\n')
+  if (!isJson) {
+    console.log('\n======================================================')
+    console.log('🔄  Garmin Watch Face Generator — RSI 自演进评估系统')
+    console.log('======================================================\n')
+    console.log('🚀 正在执行全量原型表盘基准评估 (5 大核心用例)...')
+  }
 
-  console.log('🚀 正在执行全量原型表盘基准评估 (5 大核心用例)...')
   const report = await runBenchmark()
 
   // Save report to history
@@ -23,7 +26,21 @@ async function main() {
   const historyDir = path.resolve('rsi/history')
   await fs.mkdir(historyDir, { recursive: true })
   const reportPath = path.join(historyDir, filename)
-  await fs.writeFile(reportPath, JSON.stringify(report, null, 2), 'utf8')
+  const latestPath = path.join(historyDir, 'latest.json')
+  const reportJson = JSON.stringify(report, null, 2)
+  await fs.writeFile(reportPath, reportJson, 'utf8')
+  await fs.writeFile(latestPath, reportJson, 'utf8')
+
+  if (isJson) {
+    const diagnosis = diagnoseReport(report)
+    console.log(JSON.stringify({
+      ...report,
+      diagnosis,
+      snapshotPath: reportPath,
+      latestPath
+    }, null, 2))
+    return
+  }
 
   console.log(`\n⏱️  评估完成，用时: ${report.durationMs}ms | 评估快照已保存: rsi/history/${filename}\n`)
 

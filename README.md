@@ -208,6 +208,25 @@ npm test
 
 ---
 
+## 🔄 RSI 递归自演进引擎 (Recursive Self-Improvement)
+
+本项目内置针对表盘生成质量与硬件约束的自动评估与自递归提升系统，支持人类开发者与外部 AI Agent 自主推进成功率：
+
+```bash
+# 执行全量原型评估看板 (5 大典型表盘形态)
+npm run rsi:eval
+
+# 机器可读 JSON 输出 (供外部 AI Agent 自动化消费)
+node rsi/loop.mjs --json
+
+# 评估对比与演进 Delta 报告
+node rsi/loop.mjs --compare rsi/history/latest.json
+```
+
+详细规范与 Agent 协作 SOP 请查阅 [docs/RSI_FRAMEWORK.md](docs/RSI_FRAMEWORK.md) 与 [AGENTS.md](AGENTS.md)。
+
+---
+
 ## ⚠️ 免责声明 (Disclaimer)
 
 - **非官方项目**：本项目为开源社区第三方开发的 DeepSeek Harness 扩展插件，与 **Garmin Ltd.（佳明）** 无官方合作、赞助或背书关系。

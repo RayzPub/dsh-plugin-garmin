@@ -167,3 +167,41 @@ dsh web --patch ./cordis.patch.yml --no-open
    - 所有的色彩映射必须经过 `mapColorToGarminMIP64()` 吸附算法，禁止在 WatchFaceSpec 中产生无法被 Fenix 7 显示屏渲染的非法 Hex 颜色。
 4. **无头环境密钥安全**：
    - 生成 4096 位 RSA 开发者私钥时，首选 `node:crypto.generateKeyPairSync` 直接输出 PKCS#8 DER 格式，免去外部 OpenSSL 依赖；若环境缺少 crypto 则自动降级至安全转义的 openssl 命令行调用。
+
+---
+
+## 🤖 外部 AI Agent 驱动 RSI 递归自演进 SOP
+
+当外部自治 Agent（如 Antigravity, Claude Code, Cursor Agent, CI Bot）被派发任务以持续优化表盘生成成功率时，**必须严格遵守以下 6 步自演进 SOP**：
+
+### 1. 标准自演进循环 (Evolution Loop)
+1. **跑测并获取当前评分基线**：
+   ```bash
+   node rsi/loop.mjs --json > /tmp/rsi-baseline.json
+   ```
+   读取输出中的 `averageScore`（0~100 分）、`passRate` 与 `diagnosis.actionItems`。
+2. **审查瓶颈与精准定位**：
+   - 检查 `diagnosis.topBottlenecks`（失分最多的共性缺陷）；
+   - 查看 `diagnosis.actionItems` 推荐的修改目标（如 `src/preview/code-generator.ts`、`src/tools/garmin-preview.ts`）。
+3. **定向代码优化**：
+   - 针对 Action Items 修改源码；
+   - 保持现有架构、类型定义与注释风格不变；
+   - 严禁为了凑分在源码中添加针对测试用例的硬编码 bypass。
+4. **强回归单元测试 (门禁)**：
+   ```bash
+   npm test
+   ```
+   必须确保 26 项单元与端到端测试全绿通过。如有任何测试失败，必须优先修复，禁止跳过。
+5. **演进对比与量化决策**：
+   ```bash
+   node rsi/loop.mjs --compare /tmp/rsi-baseline.json
+   ```
+   对比本次改进与基线的平均得分及通过率变化。
+6. **准入准出决策**：
+   - ✅ **采纳提升**：若 `averageScore` 提升或达标用例数增加，且无任何回归，执行 Git Commit 固化演进成果；
+   - ❌ **自动回滚**：若评分未提升、产生负向退化或测试报错，执行 `git checkout -- src/` 回滚，换用其他优化策略重新探索。
+
+### 2. 外部 Agent 防作弊红线 (Anti-Gaming Invariants)
+- 🚫 **不可变测试集**：`rsi/cases/archetypes.json` 是基准标尺，禁止为了拉高分数删除或篡改测试用例。
+- 🚫 **不可变评分器**：禁止修改 `rsi/analyzer.mjs` 中的扣分逻辑或下调满分标准。
+- 🚫 **硬件铁律不可破**：`onUpdate()` 零分配（Zero Allocation）与 64 色 MIP 调色板为 Garmin 硬件物理约束，任何优化方案必须以绝对遵守该铁律为前提。

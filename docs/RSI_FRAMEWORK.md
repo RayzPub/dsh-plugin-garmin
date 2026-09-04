@@ -78,3 +78,71 @@ node rsi/loop.mjs --diagnose
 node rsi/loop.mjs --compare rsi/history/run-<previous-run>.json
 ```
 自动比对本次运行与上一次运行的各项指标得分，输出彩色 ASCII 提升对比表（Delta Table）。
+
+### 4. 机器可读 JSON 输出（供外部 Agent 自动化消费）
+```bash
+node rsi/loop.mjs --json
+```
+以标准 JSON 结构直接向 stdout 输出全量评分、子项细则（breakdown）、违规列表（violations）以及精准诊断指南（diagnosis.actionItems）。
+
+---
+
+## 🤖 五、 外部 Agent 自动化协议与机器可读规范 (Agent Protocol)
+
+为支持外部自主 Agent（如 Antigravity, Claude Code, Cursor, CI Bot）无需人类介入闭环驱动自演进，制定本契约：
+
+### 1. 结构化输出 Schema
+`node rsi/loop.mjs --json` 输出核心字段如下：
+```json
+{
+  "timestamp": "2026-09-04T07:46:02.960Z",
+  "durationMs": 82,
+  "totalCases": 5,
+  "passedCases": 5,
+  "averageScore": 99.8,
+  "passRate": "100%",
+  "latestPath": "/path/to/rsi/history/latest.json",
+  "cases": [
+    {
+      "id": "tactical_stealth",
+      "score": 99,
+      "passed": true,
+      "breakdown": {
+        "completeness": 25,
+        "hardware": 35,
+        "fidelity": 24,
+        "safety": 15
+      },
+      "violations": [],
+      "successes": ["..."]
+    }
+  ],
+  "diagnosis": {
+    "topBottlenecks": [
+      { "issue": "...", "occurrences": 1, "impact": "20% 用例受影响" }
+    ],
+    "actionItems": [
+      {
+        "area": "src/preview/code-generator.ts",
+        "title": "...",
+        "fix": "..."
+      }
+    ]
+  }
+}
+```
+
+### 2. 外部 Agent 的标准决策循环（Decision Loop）
+1. **获取基线**：执行 `node rsi/loop.mjs --json` 并保存为 `baseline.json`；
+2. **提取瓶颈**：读取 `diagnosis.actionItems`，找到 `area`（目标源码文件）与 `fix`（修复建议）；
+3. **精准编码**：修改对应 `src/` 文件，保持现有架构规范与注释完整性；
+4. **硬性单元验证**：执行 `npm test`，确保原有 26 项单元测试 100% 通过（防止代码回归）；
+5. **衡量演进成果**：执行 `node rsi/loop.mjs --compare baseline.json`；
+6. **准入准出决策**：
+   - ✅ **提交 (Commit)**：`averageScore` 提升，且 `npm test` 全绿；
+   - ❌ **回滚 (Rollback)**：若分数未提升或测试报错，执行 `git reset --hard` 并基于下一条 Action Item 重新探索。
+
+### 3. 评测完整性与防作弊红线 (Anti-Gaming Invariants)
+- ❌ **严禁篡改基准用例**：`rsi/cases/archetypes.json` 是不可变的系统标尺，禁止为了提高分数删除或修改用例中的微件与断言要求。
+- ❌ **严禁弱化评分门禁**：禁止修改 `rsi/analyzer.mjs` 中的满分上限或删减违规检测逻辑。
+- ❌ **严禁破坏硬件红线**：零分配（Zero Allocation in `onUpdate`）与 64 色 MIP 调色板为不可违背的物理铁律。
