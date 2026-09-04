@@ -91,9 +91,19 @@ async function main() {
       console.log(`基线时间: ${baseline.timestamp} ➔ 当前时间: ${report.timestamp}`)
       console.log(`平均得分: ${baseline.averageScore} ➔ ${report.averageScore} (变化: ${avgDiff >= 0 ? '+' + avgDiff : avgDiff} 分)`)
       console.log(`达标用例: ${baseline.passedCases}/${baseline.totalCases} ➔ ${report.passedCases}/${report.totalCases} (变化: ${passDiff >= 0 ? '+' + passDiff : passDiff})`)
-      console.log('======================================================================')
+
+      if (avgDiff < 0 || passDiff < 0) {
+        console.log('❌ 演进评估未通过：本次改动导致评分或达标数发生退化 (Exit Code: 1)。')
+        console.log('======================================================================')
+        process.exitCode = 1
+      } else {
+        console.log('✅ 演进评估通过：本次改动维持或提升了基准质量 (Exit Code: 0)。')
+        console.log('======================================================================')
+        process.exitCode = 0
+      }
     } catch (err) {
       console.error(`无法读取基线对比文件: ${err.message}`)
+      process.exitCode = 1
     }
   }
 }
