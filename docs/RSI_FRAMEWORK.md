@@ -22,8 +22,10 @@ rsi/
 ├── runner.mjs               # 测试运行器：执行表盘生成并捕获产物与运行轨迹
 ├── analyzer.mjs             # 产物白盒分析器：对 SVG、Monkey C、Manifest 进行多维度打分
 ├── diagnostician.mjs        # 瓶颈诊断器：汇总缺陷，计算各环节失分，生成行动指南
-├── loop.mjs                 # RSI 闭环总控 CLI（支持跑测、对比、诊断）
-└── history/                 # 历史跑测评分快照（用于 Delta 对比与回归检测）
+└── history/                 # 历史快照与物理产物
+    ├── run-<timestamp>.json # 每次演进跑测的数据化 JSON 报告
+    ├── latest.json          # 最新一次跑测结果软链接/快照
+    └── runs/                # 对应各原型生成的实体工程与预览 SVG 产物
 ```
 
 ---

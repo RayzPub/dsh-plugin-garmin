@@ -10,7 +10,7 @@ import { analyzeCaseResult } from './analyzer.mjs'
 export async function runBenchmark(options = {}) {
   const casesFile = path.resolve('rsi/cases/archetypes.json')
   const casesData = JSON.parse(await fs.readFile(casesFile, 'utf8'))
-  const baseOutputDir = path.resolve('eval-runs/rsi-eval')
+  const baseOutputDir = path.resolve('rsi/history/runs')
 
   await fs.mkdir(baseOutputDir, { recursive: true })
 
