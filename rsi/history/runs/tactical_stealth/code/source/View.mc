@@ -3,7 +3,6 @@ import Toybox.Lang;
 import Toybox.System;
 import Toybox.WatchUi;
 import Toybox.ActivityMonitor;
-import Toybox.SensorHistory;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
 import Toybox.Math;
@@ -41,8 +40,8 @@ class GarminWatchFaceView extends WatchUi.WatchFace {
             var isMajor = (i % 5 == 0);
             var angleRad = (i * 6 * Math.PI) / 180.0;
             var tickLen = isMajor ? 8 : 4;
-            var r1 = 120 - tickLen;
-            var r2 = 120;
+            var r1 = 124 - tickLen;
+            var r2 = 124;
             var x1 = cx + r1 * Math.sin(angleRad);
             var y1 = cy - r1 * Math.cos(angleRad);
             var x2 = cx + r2 * Math.sin(angleRad);
@@ -51,24 +50,10 @@ class GarminWatchFaceView extends WatchUi.WatchFace {
             dc.drawLine(x1, y1, x2, y2);
         }
 
-        // --- Dial Numbers (12, 3, 6, 9) --- Zero Allocation ---
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        for (var h = 0; h < 4; h += 1) {
-            var val = (h == 0) ? 12 : (h * 3);
-            var angle = (val * 30 * Math.PI) / 180.0;
-            var nx = cx + 102 * Math.sin(angle);
-            var ny = cy - 102 * Math.cos(angle);
-            dc.drawText(nx, ny, Graphics.FONT_TINY, val.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        }
-
         // --- Digital Clock ---
         var timeStr = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(130, 88, Graphics.FONT_NUMBER_HOT, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        if (!_isSleep) {
-            var secStr = clockTime.sec.format("%02d");
-            dc.drawText(190, 78, Graphics.FONT_XTINY, secStr, Graphics.TEXT_JUSTIFY_LEFT);
-        }
+        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(130, 196, Graphics.FONT_NUMBER_HOT, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // Complication: Heart Rate (arc ring) (#1)
         var hrStr_0 = "--";
@@ -84,14 +69,14 @@ class GarminWatchFaceView extends WatchUi.WatchFace {
         }
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
-        drawArcRing(dc, 72, 162, 22, 135, 270);
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        drawArcRing(dc, 62, 92, 22, 135, 270);
+        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
-        drawArcRing(dc, 72, 162, 22, 135, hrPct_0 * 270.0);
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(72, 166, Graphics.FONT_XTINY, hrStr_0, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        drawArcRing(dc, 62, 92, 22, 135, hrPct_0 * 270.0);
+        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(62, 96, Graphics.FONT_XTINY, hrStr_0, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(72, 152, Graphics.FONT_XTINY, "HR", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(62, 82, Graphics.FONT_XTINY, "HR", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // Complication: Steps (arc ring) (#2)
         var stepCount_1 = 0;
@@ -102,54 +87,61 @@ class GarminWatchFaceView extends WatchUi.WatchFace {
         if (stepPct_1 > 1.0) { stepPct_1 = 1.0; }
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
-        drawArcRing(dc, 188, 162, 22, 135, 270);
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+        drawArcRing(dc, 198, 92, 22, 135, 270);
+        dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
-        drawArcRing(dc, 188, 162, 22, 135, stepPct_1 * 270.0);
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(188, 166, Graphics.FONT_XTINY, stepCount_1.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        drawArcRing(dc, 198, 92, 22, 135, stepPct_1 * 270.0);
+        dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(198, 96, Graphics.FONT_XTINY, stepCount_1.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(188, 152, Graphics.FONT_XTINY, "STEP", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(198, 82, Graphics.FONT_XTINY, "STEP", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // Complication: Battery (progress bar) (#3)
         var bat_2 = (sysStats != null && sysStats.battery != null) ? sysStats.battery.toNumber() : 0;
         var batCol_2 = (bat_2 <= 20) ? Graphics.COLOR_RED : Graphics.COLOR_ORANGE;
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.fillRectangle(112, 205, 36, 6);
+        dc.fillRectangle(112, 226, 36, 6);
         dc.setColor(batCol_2, Graphics.COLOR_TRANSPARENT);
         var batW_2 = 36 * bat_2 / 100;
         if (batW_2 > 0) {
-            dc.fillRectangle(112, 205, batW_2, 6);
+            dc.fillRectangle(112, 226, batW_2, 6);
         }
         dc.setColor(batCol_2, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(130, 199, Graphics.FONT_XTINY, bat_2.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(130, 220, Graphics.FONT_XTINY, bat_2.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+        // Complication: Date (#4)
+        var now_3 = Time.now();
+        var dateInfo_3 = Gregorian.info(now_3, Time.FORMAT_SHORT);
+        var dateStr_3 = dateInfo_3.month.format("%02d") + "/" + dateInfo_3.day.format("%02d");
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(130, 56, Graphics.FONT_XTINY, dateStr_3, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         // --- Analog Hands ---
         var hAngle = ((clockTime.hour % 12 + clockTime.min / 60.0) * 30.0 * Math.PI) / 180.0;
         var mAngle = ((clockTime.min + clockTime.sec / 60.0) * 6.0 * Math.PI) / 180.0;
 
         // Hour Hand
-        var hx = cx + 50 * Math.sin(hAngle);
-        var hy = cy - 50 * Math.cos(hAngle);
+        var hx = cx + 56 * Math.sin(hAngle);
+        var hy = cy - 56 * Math.cos(hAngle);
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(4);
+        dc.setPenWidth(6);
         dc.drawLine(cx, cy, hx, hy);
 
         // Minute Hand
-        var mx = cx + 80 * Math.sin(mAngle);
-        var my = cy - 80 * Math.cos(mAngle);
+        var mx = cx + 84 * Math.sin(mAngle);
+        var my = cy - 84 * Math.cos(mAngle);
         dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(3);
+        dc.setPenWidth(5);
         dc.drawLine(cx, cy, mx, my);
 
         // Second Hand (active only in high power / awake mode)
         if (!_isSleep) {
             var sAngle = (clockTime.sec * 6.0 * Math.PI) / 180.0;
-            var sx = cx + 95 * Math.sin(sAngle);
-            var sy = cy - 95 * Math.cos(sAngle);
+            var sx = cx + 96 * Math.sin(sAngle);
+            var sy = cy - 96 * Math.cos(sAngle);
             var stx = cx - 18 * Math.sin(sAngle);
             var sty = cy + 18 * Math.cos(sAngle);
-            dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-            dc.setPenWidth(1);
+            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(2);
             dc.drawLine(stx, sty, sx, sy);
             dc.fillCircle(cx, cy, 3);
         } else {

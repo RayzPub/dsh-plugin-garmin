@@ -14,86 +14,83 @@
   
 <g clip-path="url(#fenix7-round-clip)" filter="url(#mip-subtle-contrast)">
 <rect x="0" y="0" width="260" height="260" fill="#000000" />
-<line x1="130.0" y1="18.0" x2="130.0" y2="10.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="142.1" y1="14.6" x2="142.5" y2="10.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="154.1" y1="16.5" x2="154.9" y2="12.6" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="165.8" y1="19.7" x2="167.1" y2="15.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="177.2" y1="24.0" x2="178.8" y2="20.4" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="186.0" y1="33.0" x2="190.0" y2="26.1" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="198.2" y1="36.2" x2="200.5" y2="32.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="207.6" y1="43.8" x2="210.3" y2="40.8" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="216.2" y1="52.4" x2="219.2" y2="49.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="223.8" y1="61.8" x2="227.1" y2="59.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="227.0" y1="74.0" x2="233.9" y2="70.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="236.0" y1="82.8" x2="239.6" y2="81.2" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="240.3" y1="94.2" x2="244.1" y2="92.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="243.5" y1="105.9" x2="247.4" y2="105.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="245.4" y1="117.9" x2="249.3" y2="117.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="242.0" y1="130.0" x2="250.0" y2="130.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="245.4" y1="142.1" x2="249.3" y2="142.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="243.5" y1="154.1" x2="247.4" y2="154.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="240.3" y1="165.8" x2="244.1" y2="167.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="236.0" y1="177.2" x2="239.6" y2="178.8" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="227.0" y1="186.0" x2="233.9" y2="190.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="223.8" y1="198.2" x2="227.1" y2="200.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="216.2" y1="207.6" x2="219.2" y2="210.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="207.6" y1="216.2" x2="210.3" y2="219.2" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="198.2" y1="223.8" x2="200.5" y2="227.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="186.0" y1="227.0" x2="190.0" y2="233.9" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="177.2" y1="236.0" x2="178.8" y2="239.6" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="165.8" y1="240.3" x2="167.1" y2="244.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="154.1" y1="243.5" x2="154.9" y2="247.4" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="142.1" y1="245.4" x2="142.5" y2="249.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="130.0" y1="242.0" x2="130.0" y2="250.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="117.9" y1="245.4" x2="117.5" y2="249.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="105.9" y1="243.5" x2="105.1" y2="247.4" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="94.2" y1="240.3" x2="92.9" y2="244.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="82.8" y1="236.0" x2="81.2" y2="239.6" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="74.0" y1="227.0" x2="70.0" y2="233.9" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="61.8" y1="223.8" x2="59.5" y2="227.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="52.4" y1="216.2" x2="49.7" y2="219.2" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="43.8" y1="207.6" x2="40.8" y2="210.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="36.2" y1="198.2" x2="32.9" y2="200.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="33.0" y1="186.0" x2="26.1" y2="190.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="24.0" y1="177.2" x2="20.4" y2="178.8" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="19.7" y1="165.8" x2="15.9" y2="167.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="16.5" y1="154.1" x2="12.6" y2="154.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="14.6" y1="142.1" x2="10.7" y2="142.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="18.0" y1="130.0" x2="10.0" y2="130.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="14.6" y1="117.9" x2="10.7" y2="117.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="16.5" y1="105.9" x2="12.6" y2="105.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="19.7" y1="94.2" x2="15.9" y2="92.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="24.0" y1="82.8" x2="20.4" y2="81.2" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="33.0" y1="74.0" x2="26.1" y2="70.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="36.2" y1="61.8" x2="32.9" y2="59.5" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="43.8" y1="52.4" x2="40.8" y2="49.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="52.4" y1="43.8" x2="49.7" y2="40.8" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="61.8" y1="36.2" x2="59.5" y2="32.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="74.0" y1="33.0" x2="70.0" y2="26.1" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
-<line x1="82.8" y1="24.0" x2="81.2" y2="20.4" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="94.2" y1="19.7" x2="92.9" y2="15.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="105.9" y1="16.5" x2="105.1" y2="12.6" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<line x1="117.9" y1="14.6" x2="117.5" y2="10.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
-<text x="130.0" y="33.0" fill="#FF5500" font-family="'Roboto Condensed', -apple-system, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">12</text>
-<text x="232.0" y="135.0" fill="#FF5500" font-family="'Roboto Condensed', -apple-system, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">3</text>
-<text x="130.0" y="237.0" fill="#FF5500" font-family="'Roboto Condensed', -apple-system, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">6</text>
-<text x="28.0" y="135.0" fill="#FF5500" font-family="'Roboto Condensed', -apple-system, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">9</text>
-<path d="M 89.0 145.0 A 24 24 0 1 0 89.0 179.0" fill="none" stroke="#555555" stroke-width="4" stroke-linecap="round"/>
-<path d="M 60.6 183.1 A 24 24 0 0 0 89.0 179.0" fill="none" stroke="#FF5500" stroke-width="4" stroke-linecap="round"/>
-<text x="72" y="166" fill="#FF5500" font-family="'Roboto Condensed', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">78</text>
-<text x="72" y="152" fill="#AAAAAA" font-family="'Roboto Condensed', sans-serif" font-size="8" text-anchor="middle">HR</text>
-<path d="M 205.0 145.0 A 24 24 0 1 0 205.0 179.0" fill="none" stroke="#555555" stroke-width="4" stroke-linecap="round"/>
-<path d="M 178.0 140.2 A 24 24 0 1 0 205.0 179.0" fill="none" stroke="#FF5500" stroke-width="4" stroke-linecap="round"/>
-<text x="188" y="166" fill="#FF5500" font-family="'Roboto Condensed', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">7420</text>
-<text x="188" y="152" fill="#AAAAAA" font-family="'Roboto Condensed', sans-serif" font-size="8" text-anchor="middle">STEP</text>
-<rect x="112" y="205" width="36" height="6" rx="2" fill="#555555" />
-<rect x="112" y="205" width="30.96" height="6" rx="2" fill="#FF5500" />
-<text x="130" y="201" fill="#FF5500" font-family="'Roboto Condensed', sans-serif" font-size="10" font-weight="bold" text-anchor="middle">86%</text>
-<text x="130" y="88" fill="#FFFFFF" font-family="'Roboto Condensed', 'Helvetica Neue', sans-serif" font-size="44" font-weight="900" letter-spacing="1" text-anchor="middle">10:08</text>
-<text x="192" y="76" fill="#FFFFFF" font-family="'Roboto Condensed', sans-serif" font-size="14" font-weight="bold">42</text>
-<line x1="139.9" y1="136.7" x2="88.5" y2="102.0" stroke="#FF5500" stroke-width="4" stroke-linecap="round"/>
-<line x1="117.4" y1="139.8" x2="193.2" y2="81.0" stroke="#FF5500" stroke-width="3" stroke-linecap="round"/>
-<line x1="150.9" y1="123.2" x2="39.6" y2="159.4" stroke="#FF5500" stroke-width="1" stroke-linecap="round"/>
-<circle cx="130" cy="130" r="4" fill="#FF5500" />
+<line x1="130.0" y1="14.0" x2="130.0" y2="6.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="142.5" y1="10.7" x2="143.0" y2="6.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="154.9" y1="12.6" x2="155.8" y2="8.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="167.1" y1="15.9" x2="168.3" y2="12.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="178.8" y1="20.4" x2="180.4" y2="16.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="188.0" y1="29.5" x2="192.0" y2="22.6" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="200.5" y1="32.9" x2="202.9" y2="29.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="210.3" y1="40.8" x2="213.0" y2="37.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="219.2" y1="49.7" x2="222.1" y2="47.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="227.1" y1="59.5" x2="230.3" y2="57.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="230.5" y1="72.0" x2="237.4" y2="68.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="239.6" y1="81.2" x2="243.3" y2="79.6" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="244.1" y1="92.9" x2="247.9" y2="91.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="247.4" y1="105.1" x2="251.3" y2="104.2" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="249.3" y1="117.5" x2="253.3" y2="117.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="246.0" y1="130.0" x2="254.0" y2="130.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="249.3" y1="142.5" x2="253.3" y2="143.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="247.4" y1="154.9" x2="251.3" y2="155.8" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="244.1" y1="167.1" x2="247.9" y2="168.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="239.6" y1="178.8" x2="243.3" y2="180.4" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="230.5" y1="188.0" x2="237.4" y2="192.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="227.1" y1="200.5" x2="230.3" y2="202.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="219.2" y1="210.3" x2="222.1" y2="213.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="210.3" y1="219.2" x2="213.0" y2="222.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="200.5" y1="227.1" x2="202.9" y2="230.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="188.0" y1="230.5" x2="192.0" y2="237.4" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="178.8" y1="239.6" x2="180.4" y2="243.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="167.1" y1="244.1" x2="168.3" y2="247.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="154.9" y1="247.4" x2="155.8" y2="251.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="142.5" y1="249.3" x2="143.0" y2="253.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="130.0" y1="246.0" x2="130.0" y2="254.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="117.5" y1="249.3" x2="117.0" y2="253.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="105.1" y1="247.4" x2="104.2" y2="251.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="92.9" y1="244.1" x2="91.7" y2="247.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="81.2" y1="239.6" x2="79.6" y2="243.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="72.0" y1="230.5" x2="68.0" y2="237.4" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="59.5" y1="227.1" x2="57.1" y2="230.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="49.7" y1="219.2" x2="47.0" y2="222.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="40.8" y1="210.3" x2="37.9" y2="213.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="32.9" y1="200.5" x2="29.7" y2="202.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="29.5" y1="188.0" x2="22.6" y2="192.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="20.4" y1="178.8" x2="16.7" y2="180.4" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="15.9" y1="167.1" x2="12.1" y2="168.3" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="12.6" y1="154.9" x2="8.7" y2="155.8" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="10.7" y1="142.5" x2="6.7" y2="143.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="14.0" y1="130.0" x2="6.0" y2="130.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="10.7" y1="117.5" x2="6.7" y2="117.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="12.6" y1="105.1" x2="8.7" y2="104.2" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="15.9" y1="92.9" x2="12.1" y2="91.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="20.4" y1="81.2" x2="16.7" y2="79.6" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="29.5" y1="72.0" x2="22.6" y2="68.0" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="32.9" y1="59.5" x2="29.7" y2="57.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="40.8" y1="49.7" x2="37.9" y2="47.0" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="49.7" y1="40.8" x2="47.0" y2="37.9" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="59.5" y1="32.9" x2="57.1" y2="29.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="72.0" y1="29.5" x2="68.0" y2="22.6" stroke="#555555" stroke-width="2.5" stroke-linecap="square" />
+<line x1="81.2" y1="20.4" x2="79.6" y2="16.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="92.9" y1="15.9" x2="91.7" y2="12.1" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="105.1" y1="12.6" x2="104.2" y2="8.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<line x1="117.5" y1="10.7" x2="117.0" y2="6.7" stroke="#555555" stroke-width="1" stroke-linecap="square" />
+<path d="M 79.0 75.0 A 24 24 0 1 0 79.0 109.0" fill="none" stroke="#555555" stroke-width="4" stroke-linecap="round"/>
+<path d="M 42.3 78.3 A 24 24 0 0 0 79.0 109.0" fill="none" stroke="#FF0000" stroke-width="4" stroke-linecap="round"/>
+<text x="62" y="96" fill="#FF0000" font-family="'Roboto Condensed', sans-serif" font-size="12" font-weight="bold" text-anchor="middle">128</text>
+<text x="62" y="82" fill="#AAAAAA" font-family="'Roboto Condensed', sans-serif" font-size="8" text-anchor="middle">HR</text>
+<path d="M 215.0 75.0 A 24 24 0 1 0 215.0 109.0" fill="none" stroke="#555555" stroke-width="4" stroke-linecap="round"/>
+<path d="M 199.0 68.0 A 24 24 0 1 0 215.0 109.0" fill="none" stroke="#00FF00" stroke-width="4" stroke-linecap="round"/>
+<text x="198" y="96" fill="#00FF00" font-family="'Roboto Condensed', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">8420</text>
+<text x="198" y="82" fill="#AAAAAA" font-family="'Roboto Condensed', sans-serif" font-size="8" text-anchor="middle">STEP</text>
+<rect x="112" y="226" width="36" height="6" rx="2" fill="#555555" />
+<rect x="112" y="226" width="25.92" height="6" rx="2" fill="#FF5500" />
+<text x="130" y="222" fill="#FF5500" font-family="'Roboto Condensed', sans-serif" font-size="10" font-weight="bold" text-anchor="middle">72%</text>
+<rect x="102" y="46" width="56" height="18" rx="3" fill="#222222" stroke="#555555" stroke-width="1" />
+<text x="130" y="59" fill="#AAAAAA" font-family="'Roboto Condensed', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">WED 10-24</text>
+<text x="130" y="196" fill="#FF5500" font-family="'Roboto Condensed', 'Helvetica Neue', sans-serif" font-size="44" font-weight="900" letter-spacing="1" text-anchor="middle">14:37</text>
+<line x1="118.2" y1="132.4" x2="184.9" y2="118.8" stroke="#FF5500" stroke-width="6" stroke-linecap="round"/>
+<line x1="141.5" y1="118.9" x2="69.4" y2="188.1" stroke="#FF5500" stroke-width="5" stroke-linecap="round"/>
+<line x1="150.9" y1="123.2" x2="38.7" y2="159.7" stroke="#FFAA00" stroke-width="2" stroke-linecap="round"/>
+<circle cx="130" cy="130" r="4" fill="#FFAA00" />
 </g>
 <circle cx="130" cy="130" r="129" fill="none" stroke="#333333" stroke-width="2"/></svg>

@@ -49,4 +49,19 @@ When the user asks you to create or modify a watch face through natural conversa
    - Always check for \`null\` and \`ActivityMonitor.INVALID_HR_SAMPLE\` when querying \`ActivityMonitor.getInfo()\` or \`System.getSystemStats()\`.
 3. **High Power vs Low Power (Sleep Mode)**:
    - Handle \`onEnterSleep()\` and \`onExitSleep()\`. In sleep mode, stop drawing continuous 1Hz animations unless using \`onPartialUpdate()\` with a tightly bounded clip rectangle.
+
+## WatchFaceSpec Declarative Model & Built-in Templates
+When invoking \`garmin_preview\` or \`garmin_scaffold\`, provide a structured \`spec\` (or specify \`template: "tactical" | "sport" | "pilot" | "minimal" | "hybrid"\`):
+- \`clockType\`: "analog" | "digital" | "hybrid"
+- \`backgroundColor\`: Hex string from MIP 64 palette (e.g. "#000000")
+- \`dial\`: { showTicks: boolean, tickColor: string, subTicks: boolean, showNumbers: boolean, numberColor: string, radius: number }
+- \`digitalClock\`: { x: number, y: number, font: "NUMBER_HOT" | "NUMBER_MILD" | "LARGE" | "MEDIUM", color: string, showSeconds: boolean, showAmPm: boolean }
+- \`analogHands\`: { showHourHand: boolean, hourColor: string, hourLength: number, hourWidth: number, showMinuteHand: boolean, minuteColor: string, minuteLength: number, minuteWidth: number, showSecondHand: boolean, secondColor: string, secondLength: number, secondWidth: number, accentTail: boolean }
+- \`complications\`: Array of items, each having:
+  * \`id\`: unique string (e.g. "hr", "step", "bat", "date", "cal")
+  * \`type\`: "heart_rate" | "steps" | "battery" | "date" | "calories" | "altitude" | "solar_intensity"
+  * \`style\`: "arc_progress" | "bar_progress" | "metric_box" | "icon_value"
+  * \`position\`: { x: number, y: number }
+  * \`color\`: Hex string (e.g. "#FF5500", "#FF0000", "#00FF00")
+  * \`label\`: optional label text (e.g. "HR", "STEP", "BAT")
 `

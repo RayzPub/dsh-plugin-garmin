@@ -69,6 +69,30 @@
 
 ---
 
+### 【外循环实测突破】真实 dsh Headless 端到端自动化验证 (99/100)
+
+- **执行时间**：2026-09-04
+- **模式**：真实 dsh 端到端外循环 (`mode: "outer-dsh"`)
+- **评测快照**：`rsi/history/run-1788511628205.json`
+- **实测用例**：`tactical_stealth` (战术混合表盘)
+
+#### 1. 外循环实测指标
+- **总体得分**：**99 / 100**（全绿通过，0 违规项）
+  - 完整度（Completeness）：25 / 25
+  - 硬件门禁（Hardware Compliance）：35 / 35
+  - 视觉保真（Visual Fidelity）：24 / 25
+  - 空安全与传感器防御（Null Safety）：15 / 15
+- **执行过程与智能体轨迹**：
+  1. 接收自然语言意图，通过提示词中注入的 `WatchFaceSpec` 声明式模型，一次性输出精准的表盘定义；
+  2. 调用 `garmin_preview` 渲染 260×260 SVG 并完成自检；
+  3. 调用 `garmin_scaffold` 一键落地生产级工程（`manifest.xml`、`monkey.jungle`、`View.mc`、`App.mc`）；
+  4. 严格履行系统提示词中的 Pre-Build 门禁，静态审查 `manifest.xml` 语言标签与 `View.mc` 零分配/权限；
+  5. 自动诊断底层环境并调用 `garmin_env`。
+- **演进结论**：
+  验证了 RSI 体系从内循环静态分析到**真实外部大模型（DeepSeek）自然语言端到端驱动**的外循环具备极高的一致性与稳定性，闭环完全走通。
+
+---
+
 ## 📋 自动化日志维护规范 (Maintenance Protocol for Agents)
 
 任何后续接管本项目的外部 AI Agent 在完成一次自演进循环时，**必须按本规范维护本文档**：

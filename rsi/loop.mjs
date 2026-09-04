@@ -11,15 +11,24 @@ async function main() {
   const baselinePath = isCompare ? args[args.indexOf('--compare') + 1] : null
   const isDiagnose = args.includes('--diagnose')
   const isJson = args.includes('--json')
+  const isOffline = args.includes('--offline') || args.includes('--fast')
+  const caseIdx = args.indexOf('--case')
+  const caseId = caseIdx !== -1 ? args[caseIdx + 1] : null
 
   if (!isJson) {
     console.log('\n======================================================')
     console.log('🔄  Garmin Watch Face Generator — RSI 自演进评估系统')
     console.log('======================================================\n')
-    console.log('🚀 正在执行全量原型表盘基准评估 (5 大核心用例)...')
+    console.log(`🚀 正在执行 RSI 评测 [模式: ${isOffline ? '离线内循环 (offline)' : '真实 dsh 端到端外循环 (real-agent)'}]...`)
+    if (caseId) {
+      console.log(`🎯 指定目标单用例: ${caseId}`)
+    }
   }
 
-  const report = await runBenchmark()
+  const report = await runBenchmark({
+    caseId,
+    offline: isOffline
+  })
 
   // Save report to history
   const filename = `run-${Date.now()}.json`
