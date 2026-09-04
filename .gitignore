@@ -23,3 +23,6 @@ lerna-debug.log*
 
 # Agent workspace data
 .agents/
+eval-runs/**/tools/
+eval-runs/**/ciq-sdk*
+eval-runs/**/jre*

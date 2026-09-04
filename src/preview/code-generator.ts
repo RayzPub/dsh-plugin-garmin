@@ -66,11 +66,10 @@ export function generateMonkeyCView(rawSpec: WatchFaceSpec): string {
       const numColor = toMonkeyCColor(spec.dial.numberColor)
       const numRadius = radius - 18
       drawCodeBlocks.push(`
-        // --- Dial Numbers (12, 3, 6, 9) ---
+        // --- Dial Numbers (12, 3, 6, 9) --- Zero Allocation ---
         dc.setColor(${numColor}, Graphics.COLOR_TRANSPARENT);
-        var hours = [12, 3, 6, 9];
-        for (var h = 0; h < hours.size(); h++) {
-            var val = hours[h];
+        for (var h = 0; h < 4; h += 1) {
+            var val = (h == 0) ? 12 : (h * 3);
             var angle = (val * 30 * Math.PI) / 180.0;
             var nx = cx + ${numRadius} * Math.sin(angle);
             var ny = cy - ${numRadius} * Math.cos(angle);
@@ -174,11 +173,31 @@ export function generateMonkeyCView(rawSpec: WatchFaceSpec): string {
   const sleepExit = usesSleep ? '        _isSleep = false;\n' : ''
   const sleepEnter = usesSleep ? '        _isSleep = true;\n' : ''
 
+  const arcHelper = combinedCode.includes('drawArcRing') ? `
+    // Helper to draw a smooth arc ring using line segments (zero-allocation hot path)
+    function drawArcRing(dc as Graphics.Dc, ax as Number, ay as Number, ar as Number, startDeg as Number, sweepDeg as Number) as Void {
+        if (sweepDeg <= 0) { return; }
+        var segs = 24;
+        var lastX = ax + ar * Math.sin(startDeg * Math.PI / 180.0);
+        var lastY = ay - ar * Math.cos(startDeg * Math.PI / 180.0);
+        for (var i = 1; i <= segs; i += 1) {
+            var deg = startDeg + sweepDeg * i / segs;
+            var rad = deg * Math.PI / 180.0;
+            var nx = ax + ar * Math.sin(rad);
+            var ny = ay - ar * Math.cos(rad);
+            dc.drawLine(lastX, lastY, nx, ny);
+            lastX = nx;
+            lastY = ny;
+        }
+    }
+` : ''
+
   return `import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
 import Toybox.WatchUi;
 import Toybox.ActivityMonitor;
+import Toybox.SensorHistory;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
 import Toybox.Math;
@@ -210,7 +229,7 @@ ${sleepDecl}
         var actInfo = ActivityMonitor.getInfo();
 ${combinedCode}
     }
-
+${arcHelper}
     function onHide() as Void {
     }
 
@@ -232,6 +251,31 @@ function generateComplicationCode(comp: ComplicationItem, index: number): string
 
   switch (comp.type) {
     case 'heart_rate':
+      if (comp.style === 'arc_progress') {
+        return `
+        // Complication: Heart Rate (arc ring) (#${index + 1})
+        var hrStr_${index} = "--";
+        var hrVal_${index} = 0;
+        if (actInfo has :heartRate && actInfo.heartRate != null && actInfo.heartRate != ActivityMonitor.INVALID_HR_SAMPLE) {
+            hrStr_${index} = actInfo.heartRate.toString();
+            hrVal_${index} = actInfo.heartRate;
+        }
+        var hrPct_${index} = 0.0;
+        if (hrVal_${index} > 40) {
+            hrPct_${index} = (hrVal_${index} - 40) / 140.0;
+            if (hrPct_${index} > 1.0) { hrPct_${index} = 1.0; }
+        }
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4);
+        drawArcRing(dc, ${px}, ${py}, 22, 135, 270);
+        dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4);
+        drawArcRing(dc, ${px}, ${py}, 22, 135, hrPct_${index} * 270.0);
+        dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py + 4}, Graphics.FONT_XTINY, hrStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py - 10}, Graphics.FONT_XTINY, "HR", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+      }
       return `
         // Complication: Heart Rate (#${index + 1})
         var hrStr_${index} = "--";
@@ -242,6 +286,21 @@ function generateComplicationCode(comp: ComplicationItem, index: number): string
         dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "HR " + hrStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'battery':
+      if (comp.style === 'bar_progress') {
+        return `
+        // Complication: Battery (progress bar) (#${index + 1})
+        var bat_${index} = (sysStats != null && sysStats.battery != null) ? sysStats.battery.toNumber() : 0;
+        var batCol_${index} = (bat_${index} <= 20) ? Graphics.COLOR_RED : ${color};
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(${px - 18}, ${py}, 36, 6);
+        dc.setColor(batCol_${index}, Graphics.COLOR_TRANSPARENT);
+        var batW_${index} = 36 * bat_${index} / 100;
+        if (batW_${index} > 0) {
+            dc.fillRectangle(${px - 18}, ${py}, batW_${index}, 6);
+        }
+        dc.setColor(batCol_${index}, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py - 6}, Graphics.FONT_XTINY, bat_${index}.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+      }
       return `
         // Complication: Battery (#${index + 1})
         var bat_${index} = (sysStats != null && sysStats.battery != null) ? sysStats.battery.toNumber() : 0;
@@ -250,6 +309,26 @@ function generateComplicationCode(comp: ComplicationItem, index: number): string
         dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, bat_${index}.toString() + "%", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'steps':
+      if (comp.style === 'arc_progress') {
+        return `
+        // Complication: Steps (arc ring) (#${index + 1})
+        var stepCount_${index} = 0;
+        if (actInfo != null && actInfo.steps != null) {
+            stepCount_${index} = actInfo.steps;
+        }
+        var stepPct_${index} = stepCount_${index} / 10000.0;
+        if (stepPct_${index} > 1.0) { stepPct_${index} = 1.0; }
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4);
+        drawArcRing(dc, ${px}, ${py}, 22, 135, 270);
+        dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(4);
+        drawArcRing(dc, ${px}, ${py}, 22, 135, stepPct_${index} * 270.0);
+        dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py + 4}, Graphics.FONT_XTINY, stepCount_${index}.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py - 10}, Graphics.FONT_XTINY, "STEP", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+      }
       return `
         // Complication: Steps (#${index + 1})
         var stepCount_${index} = 0;
@@ -260,6 +339,22 @@ function generateComplicationCode(comp: ComplicationItem, index: number): string
         dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "STP " + stepCount_${index}.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     case 'date':
+      if (comp.style === 'badge') {
+        return `
+        // Complication: Date (badge window) (#${index + 1})
+        var now_${index} = Time.now();
+        var dateInfo_${index} = Gregorian.info(now_${index}, Time.FORMAT_SHORT);
+        var dateStr_${index} = dateInfo_${index}.month.format("%02d") + "/" + dateInfo_${index}.day.format("%02d");
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(${px - 26}, ${py - 8}, 52, 16);
+        dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(1);
+        dc.drawLine(${px - 26}, ${py - 8}, ${px + 26}, ${py - 8});
+        dc.drawLine(${px + 26}, ${py - 8}, ${px + 26}, ${py + 8});
+        dc.drawLine(${px + 26}, ${py + 8}, ${px - 26}, ${py + 8});
+        dc.drawLine(${px - 26}, ${py + 8}, ${px - 26}, ${py - 8});
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, dateStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+      }
       return `
         // Complication: Date (#${index + 1})
         var now_${index} = Time.now();
@@ -277,6 +372,22 @@ function generateComplicationCode(comp: ComplicationItem, index: number): string
         }
         dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
         dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, "CAL " + cal_${index}.toString(), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
+
+    case 'altitude':
+      return `
+        // Complication: Altitude (#${index + 1})
+        var altStr_${index} = "--";
+        if (Toybox has :SensorHistory && SensorHistory has :getElevationHistory) {
+            var elHist_${index} = SensorHistory.getElevationHistory({ :period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST });
+            if (elHist_${index} != null) {
+                var elSample_${index} = elHist_${index}.next();
+                if (elSample_${index} != null && elSample_${index}.data != null) {
+                    altStr_${index} = elSample_${index}.data.toNumber().toString() + "m";
+                }
+            }
+        }
+        dc.setColor(${color}, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(${px}, ${py}, Graphics.FONT_XTINY, altStr_${index}, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);`
 
     default:
       return `

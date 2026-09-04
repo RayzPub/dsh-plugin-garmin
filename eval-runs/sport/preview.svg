@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" width="260" height="260">
+    <defs>
+      <clipPath id="fenix7-round-clip">
+        <circle cx="130" cy="130" r="130" />
+      </clipPath>
+      <filter id="mip-subtle-contrast">
+        <feComponentTransfer>
+          <feFuncR type="linear" slope="1.05"/>
+          <feFuncG type="linear" slope="1.05"/>
+          <feFuncB type="linear" slope="1.05"/>
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  
+<g clip-path="url(#fenix7-round-clip)" filter="url(#mip-subtle-contrast)">
+<rect x="0" y="0" width="260" height="260" fill="#000000" />
+<line x1="130.0" y1="16.0" x2="130.0" y2="8.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="187.0" y1="31.3" x2="191.0" y2="24.3" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="228.7" y1="73.0" x2="235.7" y2="69.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="244.0" y1="130.0" x2="252.0" y2="130.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="228.7" y1="187.0" x2="235.7" y2="191.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="187.0" y1="228.7" x2="191.0" y2="235.7" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="130.0" y1="244.0" x2="130.0" y2="252.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="73.0" y1="228.7" x2="69.0" y2="235.7" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="31.3" y1="187.0" x2="24.3" y2="191.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="16.0" y1="130.0" x2="8.0" y2="130.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="31.3" y1="73.0" x2="24.3" y2="69.0" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<line x1="73.0" y1="31.3" x2="69.0" y2="24.3" stroke="#00AAFF" stroke-width="2.5" stroke-linecap="square" />
+<path d="M 147.0 38.0 A 24 24 0 1 0 147.0 72.0" fill="none" stroke="#555555" stroke-width="4" stroke-linecap="round"/>
+<path d="M 132.4 31.1 A 24 24 0 1 0 147.0 72.0" fill="none" stroke="#00AAFF" stroke-width="4" stroke-linecap="round"/>
+<text x="130" y="59" fill="#00AAFF" font-family="'Roboto Condensed', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">8542</text>
+<text x="130" y="45" fill="#AAAAAA" font-family="'Roboto Condensed', sans-serif" font-size="8" text-anchor="middle">STEP</text>
+<text x="80" y="165" fill="#FF00AA" font-family="'Roboto Condensed', sans-serif" font-size="13" font-weight="bold" text-anchor="middle">❤️ 72 bpm</text>
+<rect x="162" y="165" width="36" height="6" rx="2" fill="#555555" />
+<rect x="162" y="165" width="30.96" height="6" rx="2" fill="#FFFF00" />
+<text x="180" y="161" fill="#FFFF00" font-family="'Roboto Condensed', sans-serif" font-size="10" font-weight="bold" text-anchor="middle">86%</text>
+<text x="130" y="105" fill="#00FFAA" font-family="'Roboto Condensed', 'Helvetica Neue', sans-serif" font-size="44" font-weight="900" letter-spacing="1" text-anchor="middle">10:08</text>
+<text x="192" y="93" fill="#00FFAA" font-family="'Roboto Condensed', sans-serif" font-size="14" font-weight="bold">42</text>
+</g>
+<circle cx="130" cy="130" r="129" fill="none" stroke="#333333" stroke-width="2"/></svg>

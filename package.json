@@ -25,6 +25,8 @@
     "prepare": "npm run build",
     "test": "npm run build && node --test dist/test/*.js",
     "test:integration": "npm run build && node scripts/test-dsh-integration.mjs",
+    "rsi": "node rsi/loop.mjs",
+    "rsi:eval": "npm run build && node rsi/loop.mjs",
     "prepublishOnly": "npm test"
   },
   "files": [

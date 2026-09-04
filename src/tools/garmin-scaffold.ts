@@ -115,7 +115,7 @@ export async function scaffoldGarminProject(options: ScaffoldOptions): Promise<{
 
   // 1. manifest.xml
   const uuid = 'a1b2c3d4-e5f6-7a8b-9c0d-' + Date.now().toString(16).padStart(12, '0')
-  const hasSensorHistory = options.spec?.complications?.some(c => (c as any).requiresSensorHistory) ?? false
+  const hasSensorHistory = options.spec?.complications?.some(c => (c as any).requiresSensorHistory || c.type === 'altitude') ?? false
   const permissionsXml = hasSensorHistory
     ? `        <iq:permissions>
             <iq:uses-permission id="SensorHistory"/>
@@ -133,6 +133,9 @@ export async function scaffoldGarminProject(options: ScaffoldOptions): Promise<{
             <iq:product id="fenix7pro"/>
         </iq:products>
 ${permissionsXml}
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
     </iq:application>
 </iq:manifest>
 `

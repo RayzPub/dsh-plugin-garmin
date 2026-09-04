@@ -40,7 +40,28 @@ export function generateGarminPreview(
     errors
   } = normalizeWatchFaceSpec(spec, templateName)
 
-  const state: SimulationState = { ...DEFAULT_SIMULATION_STATE, ...(stateOverrides || {}) }
+  const rawOverrides = (stateOverrides || {}) as any
+  const normalizedOverrides: Partial<SimulationState> = {
+    ...rawOverrides,
+    ...(rawOverrides.battery !== undefined && rawOverrides.batteryPercent === undefined
+      ? { batteryPercent: Number(rawOverrides.battery) }
+      : {}),
+    ...(rawOverrides.hour !== undefined && rawOverrides.hours === undefined
+      ? { hours: Number(rawOverrides.hour) }
+      : {}),
+    ...(rawOverrides.min !== undefined && rawOverrides.minutes === undefined
+      ? { minutes: Number(rawOverrides.min) }
+      : rawOverrides.minute !== undefined && rawOverrides.minutes === undefined
+      ? { minutes: Number(rawOverrides.minute) }
+      : {}),
+    ...(rawOverrides.sec !== undefined && rawOverrides.seconds === undefined
+      ? { seconds: Number(rawOverrides.sec) }
+      : rawOverrides.second !== undefined && rawOverrides.seconds === undefined
+      ? { seconds: Number(rawOverrides.second) }
+      : {})
+  }
+
+  const state: SimulationState = { ...DEFAULT_SIMULATION_STATE, ...normalizedOverrides }
 
   // 2. Render SVG (wrapped in try-catch fallback)
   let svg = ''

@@ -1,0 +1,243 @@
+[
+  {
+    "id": "tactical_stealth",
+    "name": "Tactical Stealth (战术混合表盘)",
+    "template": "tactical",
+    "prompt": "设计一款 Garmin Fenix 7 战术风表盘（Tactical Stealth），包含橙色指针、深色背景、电量条、心率和步数弧环。要求先调用 garmin_preview 生成预览，再调用 garmin_scaffold 生成工程。",
+    "spec": {
+      "name": "TacticalStealth",
+      "theme": "tactical",
+      "targetDevice": "fenix7",
+      "backgroundColor": "#000000",
+      "clockType": "hybrid",
+      "dial": {
+        "showTicks": true,
+        "tickColor": "#555555",
+        "subTicks": true,
+        "showNumbers": true,
+        "numberColor": "#FF5500",
+        "radius": 120
+      },
+      "digitalClock": {
+        "x": 130,
+        "y": 88,
+        "font": "NUMBER_HOT",
+        "color": "#FFFFFF",
+        "showSeconds": true,
+        "showAmPm": false
+      },
+      "analogHands": {
+        "hourColor": "#FF5500",
+        "minuteColor": "#FF5500",
+        "secondColor": "#FF5500",
+        "hourLength": 50,
+        "minuteLength": 80,
+        "secondLength": 95,
+        "hourWidth": 4,
+        "minuteWidth": 3,
+        "secondWidth": 1,
+        "accentTail": true
+      },
+      "complications": [
+        { "id": "hr", "type": "heart_rate", "position": { "x": 72, "y": 162 }, "style": "arc_progress", "color": "#FF5500" },
+        { "id": "step", "type": "steps", "position": { "x": 188, "y": 162 }, "style": "arc_progress", "color": "#FF5500" },
+        { "id": "bat", "type": "battery", "position": { "x": 130, "y": 205 }, "style": "bar_progress", "color": "#FF5500" }
+      ]
+    },
+    "expected": {
+      "clockType": "hybrid",
+      "mustHaveHands": true,
+      "mustHaveDigital": true,
+      "requiredComplications": ["heart_rate", "steps", "battery"],
+      "mustHaveArcProgress": true,
+      "mustHaveBarProgress": true
+    }
+  },
+  {
+    "id": "sport_runner",
+    "name": "Sport Performance Runner (运动竞技纯数字表盘)",
+    "template": "sport",
+    "prompt": "设计一款 Garmin Fenix 7 运动竞技大字纯数字表盘，带有外圈步数进度环、心率和卡路里监控小部件以及日期显示。",
+    "spec": {
+      "name": "SportRunner",
+      "theme": "sport",
+      "targetDevice": "fenix7",
+      "backgroundColor": "#000000",
+      "clockType": "digital",
+      "dial": {
+        "showTicks": true,
+        "tickColor": "#00AAFF",
+        "subTicks": false,
+        "showNumbers": false,
+        "numberColor": "#FFFFFF",
+        "radius": 122
+      },
+      "digitalClock": {
+        "x": 130,
+        "y": 105,
+        "font": "NUMBER_HOT",
+        "color": "#00FFAA",
+        "showSeconds": true,
+        "showAmPm": false
+      },
+      "complications": [
+        { "id": "step", "type": "steps", "position": { "x": 130, "y": 55 }, "style": "arc_progress", "color": "#00AAFF" },
+        { "id": "hr", "type": "heart_rate", "position": { "x": 80, "y": 165 }, "style": "icon_value", "color": "#FF00AA" },
+        { "id": "cal", "type": "calories", "position": { "x": 180, "y": 165 }, "style": "icon_value", "color": "#FFAA00" },
+        { "id": "date", "type": "date", "position": { "x": 130, "y": 205 }, "style": "badge", "color": "#00FFAA" }
+      ]
+    },
+    "expected": {
+      "clockType": "digital",
+      "mustHaveHands": false,
+      "mustHaveDigital": true,
+      "requiredComplications": ["steps", "heart_rate", "calories", "date"],
+      "mustHaveArcProgress": true,
+      "mustHaveBadge": true
+    }
+  },
+  {
+    "id": "aviator_pilot",
+    "name": "Aviator Classic Chrono (经典飞行员模拟指针表盘)",
+    "template": "pilot",
+    "prompt": "设计一款 Garmin Fenix 7 经典飞行员腕表表盘，白色夜光大粗指针、12/3/6/9 经典大刻度、气压高度计和视窗日期。",
+    "spec": {
+      "name": "AviatorClassic",
+      "theme": "pilot",
+      "targetDevice": "fenix7",
+      "backgroundColor": "#000000",
+      "clockType": "analog",
+      "dial": {
+        "showTicks": true,
+        "tickColor": "#FFFFFF",
+        "subTicks": true,
+        "showNumbers": true,
+        "numberColor": "#FFAA00",
+        "radius": 120
+      },
+      "analogHands": {
+        "hourColor": "#FFFFFF",
+        "minuteColor": "#FFFFFF",
+        "secondColor": "#FFAA00",
+        "hourLength": 55,
+        "minuteLength": 85,
+        "secondLength": 100,
+        "hourWidth": 5,
+        "minuteWidth": 3,
+        "secondWidth": 1,
+        "accentTail": true
+      },
+      "complications": [
+        { "id": "alt", "type": "altitude", "position": { "x": 130, "y": 70 }, "style": "icon_value", "color": "#00AAFF" },
+        { "id": "date", "type": "date", "position": { "x": 130, "y": 175 }, "style": "badge", "color": "#FFFFFF" }
+      ]
+    },
+    "expected": {
+      "clockType": "analog",
+      "mustHaveHands": true,
+      "mustHaveDigital": false,
+      "requiredComplications": ["altitude", "date"],
+      "requiresSensorHistory": true,
+      "mustHaveBadge": true
+    }
+  },
+  {
+    "id": "minimal_clean",
+    "name": "Minimal Clean (极简超低功耗模拟表盘)",
+    "template": "minimal",
+    "prompt": "设计一款极简、高续航的 Fenix 7 模拟表盘，仅有超细指针和微型电量条，去除非必要刻度。",
+    "spec": {
+      "name": "MinimalClean",
+      "theme": "minimal",
+      "targetDevice": "fenix7",
+      "backgroundColor": "#000000",
+      "clockType": "analog",
+      "dial": {
+        "showTicks": false,
+        "tickColor": "#555555",
+        "subTicks": false,
+        "showNumbers": false,
+        "numberColor": "#AAAAAA",
+        "radius": 120
+      },
+      "analogHands": {
+        "hourColor": "#FFFFFF",
+        "minuteColor": "#AAAAAA",
+        "secondColor": "#FF0000",
+        "hourLength": 60,
+        "minuteLength": 90,
+        "secondLength": 100,
+        "hourWidth": 2,
+        "minuteWidth": 1,
+        "secondWidth": 1,
+        "accentTail": false
+      },
+      "complications": [
+        { "id": "bat", "type": "battery", "position": { "x": 130, "y": 185 }, "style": "bar_progress", "color": "#FFFFFF" }
+      ]
+    },
+    "expected": {
+      "clockType": "analog",
+      "mustHaveHands": true,
+      "mustHaveDigital": false,
+      "requiredComplications": ["battery"],
+      "mustHaveBarProgress": true
+    }
+  },
+  {
+    "id": "pro_hybrid",
+    "name": "Pro Multi-Widget Hybrid (全功能运动战术双模表盘)",
+    "template": "hybrid",
+    "prompt": "设计一款顶配复杂功能的混合双显表盘，既有数字时间，又配有橙色细指针，同时呈现心率环、步数环、电量条与日期。",
+    "spec": {
+      "name": "ProHybrid",
+      "theme": "hybrid",
+      "targetDevice": "fenix7",
+      "backgroundColor": "#000000",
+      "clockType": "hybrid",
+      "dial": {
+        "showTicks": true,
+        "tickColor": "#555555",
+        "subTicks": false,
+        "showNumbers": true,
+        "numberColor": "#AAAAAA",
+        "radius": 120
+      },
+      "digitalClock": {
+        "x": 130,
+        "y": 75,
+        "font": "NUMBER_MILD",
+        "color": "#FFFFFF",
+        "showSeconds": false,
+        "showAmPm": false
+      },
+      "analogHands": {
+        "hourColor": "#FF5500",
+        "minuteColor": "#FFFFFF",
+        "secondColor": "#FFAA00",
+        "hourLength": 45,
+        "minuteLength": 70,
+        "secondLength": 85,
+        "hourWidth": 3,
+        "minuteWidth": 2,
+        "secondWidth": 1,
+        "accentTail": true
+      },
+      "complications": [
+        { "id": "hr", "type": "heart_rate", "position": { "x": 75, "y": 150 }, "style": "arc_progress", "color": "#FF0000" },
+        { "id": "step", "type": "steps", "position": { "x": 185, "y": 150 }, "style": "arc_progress", "color": "#00FFAA" },
+        { "id": "bat", "type": "battery", "position": { "x": 130, "y": 200 }, "style": "bar_progress", "color": "#00AAFF" },
+        { "id": "date", "type": "date", "position": { "x": 130, "y": 120 }, "style": "badge", "color": "#FFAA00" }
+      ]
+    },
+    "expected": {
+      "clockType": "hybrid",
+      "mustHaveHands": true,
+      "mustHaveDigital": true,
+      "requiredComplications": ["heart_rate", "steps", "battery", "date"],
+      "mustHaveArcProgress": true,
+      "mustHaveBarProgress": true,
+      "mustHaveBadge": true
+    }
+  }
+]

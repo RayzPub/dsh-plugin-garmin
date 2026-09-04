@@ -1,0 +1,186 @@
+{
+  "timestamp": "2026-09-04T07:31:21.281Z",
+  "durationMs": 36,
+  "totalCases": 5,
+  "passedCases": 5,
+  "averageScore": 99.8,
+  "passRate": "100%",
+  "cases": [
+    {
+      "id": "tactical_stealth",
+      "name": "Tactical Stealth (战术混合表盘)",
+      "score": 99,
+      "passed": true,
+      "breakdown": {
+        "completeness": 25,
+        "hardware": 35,
+        "fidelity": 24,
+        "safety": 15
+      },
+      "violations": [],
+      "successes": [
+        "矢量预览 SVG 结构合法且大小合理",
+        "工程骨架完整 (manifest, monkey.jungle, View.mc, launcher_icon.png)",
+        "Manifest 包含标准 <iq:languages> 文本定义",
+        "遵循最小权限原则，未误声明显式 SensorHistory 权限",
+        "零分配热路径通过：onUpdate() 内无 new、无数组字面量",
+        "色彩合规：100% 映射为 Toybox.Graphics.COLOR_* 或规范 0x 十六进制",
+        "表盘指针保真度：正确生成了时分针 (hAngle/mAngle/drawLine) 动态旋转绘制逻辑",
+        "数字时钟保真度：正确生成了数字时钟排版与渲染逻辑",
+        "微件保真度：正确生成了动态弧形环 (drawArcRing) 绘制逻辑",
+        "微件保真度：正确生成了进度条 (fillRectangle) 比例填充逻辑",
+        "传感器安全：包含 heartRate null / INVALID_HR_SAMPLE 校验",
+        "传感器安全：包含 steps null 安全校验",
+        "功耗控制：包含 _isSleep 睡眠模式秒针/重绘管理"
+      ],
+      "previewSuccess": true,
+      "scaffoldSuccess": true,
+      "metrics": {
+        "estimatedMemoryKb": 45.5,
+        "maxMemoryKb": 128,
+        "colorPaletteValid": true,
+        "nonMipColorsDetected": [],
+        "recommendedFixes": []
+      }
+    },
+    {
+      "id": "sport_runner",
+      "name": "Sport Performance Runner (运动竞技纯数字表盘)",
+      "score": 100,
+      "passed": true,
+      "breakdown": {
+        "completeness": 25,
+        "hardware": 35,
+        "fidelity": 25,
+        "safety": 15
+      },
+      "violations": [],
+      "successes": [
+        "矢量预览 SVG 结构合法且大小合理",
+        "工程骨架完整 (manifest, monkey.jungle, View.mc, launcher_icon.png)",
+        "Manifest 包含标准 <iq:languages> 文本定义",
+        "遵循最小权限原则，未误声明显式 SensorHistory 权限",
+        "零分配热路径通过：onUpdate() 内无 new、无数组字面量",
+        "色彩合规：100% 映射为 Toybox.Graphics.COLOR_* 或规范 0x 十六进制",
+        "数字时钟保真度：正确生成了数字时钟排版与渲染逻辑",
+        "微件保真度：正确生成了动态弧形环 (drawArcRing) 绘制逻辑",
+        "微件保真度：正确生成了视窗边框 (badge) 绘制逻辑",
+        "传感器安全：包含 heartRate null / INVALID_HR_SAMPLE 校验",
+        "传感器安全：包含 steps null 安全校验"
+      ],
+      "previewSuccess": true,
+      "scaffoldSuccess": true,
+      "metrics": {
+        "estimatedMemoryKb": 42,
+        "maxMemoryKb": 128,
+        "colorPaletteValid": true,
+        "nonMipColorsDetected": [],
+        "recommendedFixes": []
+      }
+    },
+    {
+      "id": "aviator_pilot",
+      "name": "Aviator Classic Chrono (经典飞行员模拟指针表盘)",
+      "score": 100,
+      "passed": true,
+      "breakdown": {
+        "completeness": 25,
+        "hardware": 35,
+        "fidelity": 25,
+        "safety": 15
+      },
+      "violations": [],
+      "successes": [
+        "矢量预览 SVG 结构合法且大小合理",
+        "工程骨架完整 (manifest, monkey.jungle, View.mc, launcher_icon.png)",
+        "Manifest 包含标准 <iq:languages> 文本定义",
+        "正确声明了高度计必需的 SensorHistory 权限",
+        "零分配热路径通过：onUpdate() 内无 new、无数组字面量",
+        "色彩合规：100% 映射为 Toybox.Graphics.COLOR_* 或规范 0x 十六进制",
+        "表盘指针保真度：正确生成了时分针 (hAngle/mAngle/drawLine) 动态旋转绘制逻辑",
+        "微件保真度：正确生成了视窗边框 (badge) 绘制逻辑",
+        "功耗控制：包含 _isSleep 睡眠模式秒针/重绘管理"
+      ],
+      "previewSuccess": true,
+      "scaffoldSuccess": true,
+      "metrics": {
+        "estimatedMemoryKb": 37,
+        "maxMemoryKb": 128,
+        "colorPaletteValid": true,
+        "nonMipColorsDetected": [],
+        "recommendedFixes": []
+      }
+    },
+    {
+      "id": "minimal_clean",
+      "name": "Minimal Clean (极简超低功耗模拟表盘)",
+      "score": 100,
+      "passed": true,
+      "breakdown": {
+        "completeness": 25,
+        "hardware": 35,
+        "fidelity": 25,
+        "safety": 15
+      },
+      "violations": [],
+      "successes": [
+        "矢量预览 SVG 结构合法且大小合理",
+        "工程骨架完整 (manifest, monkey.jungle, View.mc, launcher_icon.png)",
+        "Manifest 包含标准 <iq:languages> 文本定义",
+        "遵循最小权限原则，未误声明显式 SensorHistory 权限",
+        "零分配热路径通过：onUpdate() 内无 new、无数组字面量",
+        "色彩合规：100% 映射为 Toybox.Graphics.COLOR_* 或规范 0x 十六进制",
+        "表盘指针保真度：正确生成了时分针 (hAngle/mAngle/drawLine) 动态旋转绘制逻辑",
+        "微件保真度：正确生成了进度条 (fillRectangle) 比例填充逻辑",
+        "功耗控制：包含 _isSleep 睡眠模式秒针/重绘管理"
+      ],
+      "previewSuccess": true,
+      "scaffoldSuccess": true,
+      "metrics": {
+        "estimatedMemoryKb": 34.5,
+        "maxMemoryKb": 128,
+        "colorPaletteValid": true,
+        "nonMipColorsDetected": [],
+        "recommendedFixes": []
+      }
+    },
+    {
+      "id": "pro_hybrid",
+      "name": "Pro Multi-Widget Hybrid (全功能运动战术双模表盘)",
+      "score": 100,
+      "passed": true,
+      "breakdown": {
+        "completeness": 25,
+        "hardware": 35,
+        "fidelity": 25,
+        "safety": 15
+      },
+      "violations": [],
+      "successes": [
+        "矢量预览 SVG 结构合法且大小合理",
+        "工程骨架完整 (manifest, monkey.jungle, View.mc, launcher_icon.png)",
+        "Manifest 包含标准 <iq:languages> 文本定义",
+        "遵循最小权限原则，未误声明显式 SensorHistory 权限",
+        "零分配热路径通过：onUpdate() 内无 new、无数组字面量",
+        "色彩合规：100% 映射为 Toybox.Graphics.COLOR_* 或规范 0x 十六进制",
+        "表盘指针保真度：正确生成了时分针 (hAngle/mAngle/drawLine) 动态旋转绘制逻辑",
+        "数字时钟保真度：正确生成了数字时钟排版与渲染逻辑",
+        "微件保真度：正确生成了动态弧形环 (drawArcRing) 绘制逻辑",
+        "微件保真度：正确生成了进度条 (fillRectangle) 比例填充逻辑",
+        "微件保真度：正确生成了视窗边框 (badge) 绘制逻辑",
+        "传感器安全：包含 heartRate null / INVALID_HR_SAMPLE 校验",
+        "传感器安全：包含 steps null 安全校验",
+        "功耗控制：包含 _isSleep 睡眠模式秒针/重绘管理"
+      ],
+      "previewSuccess": true,
+      "scaffoldSuccess": true,
+      "metrics": {
+        "estimatedMemoryKb": 48,
+        "maxMemoryKb": 128,
+        "colorPaletteValid": true,
+        "nonMipColorsDetected": [],
+        "recommendedFixes": []
+      }
+    }
+  ]
+}
